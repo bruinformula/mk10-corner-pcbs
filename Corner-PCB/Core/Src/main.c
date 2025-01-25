@@ -43,14 +43,21 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
+SPI_HandleTypeDef hspi1;
+
 TIM_HandleTypeDef htim1;
 
 /* USER CODE BEGIN PV */
 uint32_t ADC_Read[1];
 uint32_t ADC_BUFFER = 1;
-uint32_t lin_pot_val = 0;
 uint32_t ms_since_dma_read;
 uint32_t DMA_READ_TIMEOUT = 10;
+
+
+
+uint32_t lin_pot_val = 0;
+uint8_t spi_data[2];
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -59,6 +66,7 @@ static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 void readLinearPotentiometer(void);
 
@@ -67,16 +75,16 @@ void readLinearPotentiometer(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-void readLinearPotentiometer(void) {
-
-	HAL_ADC_Start_DMA(&hadc1, ADC_Read, ADC_BUFFER);
-	if(HAL_GetTick() - ms_since_dma_read > DMA_READ_TIMEOUT){
-		lin_pot_val = ADC_Read[0];
-
-		ms_since_dma_read = HAL_GetTick();
-	}
-
-}
+//void readLinearPotentiometer(void) {
+//
+//	HAL_ADC_Start_DMA(&hadc1, ADC_Read, ADC_BUFFER);
+//	if(HAL_GetTick() - ms_since_dma_read > DMA_READ_TIMEOUT){
+//		lin_pot_val = ADC_Read[0];
+//
+//		ms_since_dma_read = HAL_GetTick();
+//	}
+//
+//}
 
 
 /* USER CODE END 0 */
@@ -114,9 +122,15 @@ int main(void)
   MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
-
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
+
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  HAL_Delay(10);
+
+
+
 
   /* USER CODE END 2 */
 
@@ -124,8 +138,20 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  // linear potentiometer
 	  HAL_ADC_PollForConversion(&hadc1, 100);
 	  lin_pot_val = HAL_ADC_GetValue(&hadc1);
+
+
+	  // strain gauge
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
+	  spi_data[0] = 0x05;
+	  HAL_SPI_Transmit(&hspi1, spi_data, 1, 10);
+
+	  HAL_SPI_Receive(&hspi1, &spi_data[1], 1, 10);
+
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
 
 
@@ -247,6 +273,46 @@ static void MX_ADC1_Init(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_4BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 7;
+  hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief TIM1 Initialization Function
   * @param None
   * @retval None
@@ -316,11 +382,22 @@ static void MX_DMA_Init(void)
   */
 static void MX_GPIO_Init(void)
 {
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
 /* USER CODE BEGIN MX_GPIO_Init_1 */
 /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOA_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
 /* USER CODE END MX_GPIO_Init_2 */
