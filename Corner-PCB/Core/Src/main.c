@@ -56,8 +56,8 @@ uint32_t DMA_READ_TIMEOUT = 10;
 
 
 uint32_t lin_pot_val = 0;
-uint8_t spi_data[2];
-uint8_t strain_gauge;
+uint16_t spi_config;
+uint16_t strain_gauge1;
 HAL_SPI_StateTypeDef state;
 
 /* USER CODE END PV */
@@ -128,7 +128,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
 
-//  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
   HAL_Delay(10);
 
 
@@ -146,21 +146,18 @@ int main(void)
 
 
 	  // strain gauge
-//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
-	  spi_data[0] = 0x09;
-	  HAL_SPI_TransmitReceive(&hspi1, &spi_data[0], &strain_gauge, 3, 10);
+	  // Posible config codes: 0x8F80, 0xAF80, 0x8E80, 0x8F90
+	  spi_config = 0x8F80;
+	  HAL_SPI_TransmitReceive(&hspi1, (uint8_t*)&spi_config, (uint8_t*)&strain_gauge1, 1, HAL_MAX_DELAY);
 
-	   // HAL_SPI_Receive(&hspi1, &strain_gauge, 4, 10);
-	   state = HAL_SPI_GetState(&hspi1);
+      // HAL_SPI_Receive(&hspi1, &strain_gauge, 4, 10);
+	  // state = HAL_SPI_GetState(&hspi1);
 
-	   //HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-
-
-
+	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
 
-	  // readLinearPotentiometer();
 
     /* USER CODE END WHILE */
 
