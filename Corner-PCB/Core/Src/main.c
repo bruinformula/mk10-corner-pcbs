@@ -57,7 +57,15 @@ uint32_t DMA_READ_TIMEOUT = 10;
 
 uint32_t lin_pot_val = 0;
 uint16_t spi_config;
-uint16_t strain_gauge1;
+uint16_t strain_gauge;
+
+uint8_t strain_gauge1[2];
+uint8_t testval[2] = {0, 0};
+uint16_t st_value;
+uint8_t spi_configs[2];
+uint8_t MSB;
+uint8_t LSB;
+
 HAL_SPI_StateTypeDef state;
 
 /* USER CODE END PV */
@@ -128,10 +136,13 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_ADC_Start(&hadc1);
 
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
   HAL_Delay(10);
 
-
+  // Possible config codes: 0x8F80, 0xAF80, 0x8E80, 0x8F90
+  spi_config = 0x8F80;
+  spi_configs[0] = (spi_config >> 8) & 0xFF;  // Extract upper 8 bits
+  spi_configs[1] = spi_config & 0xFF;         // Extract lower 8 bits
 
 
   /* USER CODE END 2 */
@@ -147,16 +158,21 @@ int main(void)
 
 	  // strain gauge
 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+	  HAL_Delay(10);
 
-	  // Posible config codes: 0x8F80, 0xAF80, 0x8E80, 0x8F90
-	  spi_config = 0x8F80;
-	  HAL_SPI_TransmitReceive(&hspi1, (uint8_t*)&spi_config, (uint8_t*)&strain_gauge1, 1, HAL_MAX_DELAY);
+//	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
 
-      // HAL_SPI_Receive(&hspi1, &strain_gauge, 4, 10);
+
+	  // HAL_SPI_Receive(&hspi1, testval, 2, HAL_MAX_DELAY);
+
+	  HAL_SPI_TransmitReceive(&hspi1, spi_configs, strain_gauge1, 2, HAL_MAX_DELAY);
+
+	  st_value = ((strain_gauge1[0] << 8) | strain_gauge1[1]);
+      // HAL_SPI_Receive(&hspi1, (uint8_t*)&strain_gauge, 4, 10);
 	  // state = HAL_SPI_GetState(&hspi1);
 
 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
-
+	  HAL_Delay(10);
 
 
     /* USER CODE END WHILE */
@@ -303,7 +319,7 @@ static void MX_SPI1_Init(void)
   hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
   hspi1.Init.CRCPolynomial = 7;
   hspi1.Init.CRCLength = SPI_CRC_LENGTH_DATASIZE;
-  hspi1.Init.NSSPMode = SPI_NSS_PULSE_ENABLE;
+  hspi1.Init.NSSPMode = SPI_NSS_PULSE_DISABLE;
   if (HAL_SPI_Init(&hspi1) != HAL_OK)
   {
     Error_Handler();
@@ -392,13 +408,13 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET);
 
   /*Configure GPIO pin : PA4 */
   GPIO_InitStruct.Pin = GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
