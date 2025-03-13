@@ -31,6 +31,9 @@ extern "C" {
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "stm32l4xx_hal_can.h"
+#include "stm32l4xx_hal_conf.h"
+//#include "stm32l4xx_it.h"
 
 /* USER CODE END Includes */
 
@@ -53,7 +56,6 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
