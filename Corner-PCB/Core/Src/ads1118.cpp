@@ -9,7 +9,7 @@
 #include "stm32l4xx.h"
 
 
-ads1118::ads1118(uint_8 SPIBusPins[], bool debug) {
+ads1118::ads1118(SPI_HandleTypeDef *hspi, bool debug) {
 	// TODO Auto-generated constructor stub
 }
 
@@ -194,6 +194,10 @@ uint_16* BurstReadSingleEndedValues(bool converted) {
 	return readings;
 }
 
+
+/*
+ * what tf did i name it starttype endtype for
+ */
 void ReaderHelper(uint_16* readings, byte startType, byte endType) {
 	status = SPITradeData(configReg.word, readings[0]); //itll put junk data in index 0 but its okay because i overwrite it first loop thru
 	ADS1118_DISABLE;

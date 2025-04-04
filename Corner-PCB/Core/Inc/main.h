@@ -33,6 +33,8 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "stm32l4xx_hal_can.h"
 #include "stm32l4xx_hal_conf.h"
+
+//#include "ads1118.h"
 //#include "stm32l4xx_it.h"
 
 /* USER CODE END Includes */
