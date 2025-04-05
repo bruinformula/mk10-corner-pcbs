@@ -62,8 +62,14 @@ uint8_t strain_gauge1[2];
 uint8_t testval[2] = {0, 0};
 uint16_t st_value;
 uint8_t spi_configs[2];
-GPIO_PinState hall_effect_status;
 
+GPIO_PinState hall_effect_status;
+uint32_t hall_count = 0;
+uint32_t start;
+uint32_t now;
+uint32_t elapsed_ms;
+float elapsed_seconds;
+float wheel_speed;
 HAL_SPI_StateTypeDef state;
 
 /* USER CODE END PV */
@@ -147,6 +153,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  start = HAL_GetTick();
   while (1)
   {
 	  // linear potentiometer
@@ -155,6 +162,17 @@ int main(void)
 
 	  hall_effect_status = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
 
+	  if (hall_effect_status == GPIO_PIN_SET) {
+		  hall_count++;
+	  }
+
+	  elapsed_ms = HAL_GetTick() - start;
+	  if (elapsed_ms >= 500) {
+		  wheel_speed = ((float) (hall_count)) / (elapsed_ms / 1000.0f);
+		  start = HAL_GetTick();
+		  hall_count = 0;
+
+	  }
 
 	  // strain gauge
 	  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
