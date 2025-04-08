@@ -33,6 +33,9 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "stm32l4xx_hal_can.h"
 #include "stm32l4xx_hal_conf.h"
+#include "constants.h"
+#include "dataframes.h"
+#include "sensor_read_helpers.h"
 
 //#include "ads1118.h"
 //#include "stm32l4xx_it.h"
@@ -61,8 +64,16 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define GEN_FAULT_Pin GPIO_PIN_0
+#define GEN_FAULT_GPIO_Port GPIOB
+#define WHS_IN_Pin GPIO_PIN_4
+#define WHS_IN_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
+
+
+
+
 
 /* USER CODE END Private defines */
 
