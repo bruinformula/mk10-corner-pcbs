@@ -153,6 +153,7 @@ int main(void)
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+  hall_effect_status = GPIO_PIN_RESET;
   start = HAL_GetTick();
   while (1)
   {
@@ -167,7 +168,7 @@ int main(void)
 	  }
 
 	  elapsed_ms = HAL_GetTick() - start;
-	  if (elapsed_ms >= 500) {
+	  if (elapsed_ms >= 100) {
 		  wheel_speed = ((float) (hall_count)) / (elapsed_ms / 1000.0f);
 		  start = HAL_GetTick();
 		  hall_count = 0;
