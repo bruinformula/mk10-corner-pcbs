@@ -38,14 +38,14 @@ void readTireTemp(uint32_t *lastReadMS, TTEMP_DATAFRAME *dataframes) {
 
 	if(HAL_GetTick() - *lastReadMS > TIRE_TEMP_SAMPLE_PERIOD){
 		for(int i = 0; i < 4; i++) {
-			dataframes[i].data.pix0 = 0;
-			dataframes[i].data.pix1 = 0;
-			dataframes[i].data.pix2 = 0;
-			dataframes[i].data.pix3 = 0;
-			dataframes[i].data.pix4 = 0;
-			dataframes[i].data.pix5 = 0;
-			dataframes[i].data.pix6 = 0;
-			dataframes[i].data.pix7 = 0;
+			dataframes[i].data.pix0 = 1 + (4*i);
+			dataframes[i].data.pix1 = 2 + (4*i);
+			dataframes[i].data.pix2 = 3 + (4*i);
+			dataframes[i].data.pix3 = 4 + (4*i);
+			dataframes[i].data.pix4 = 5 + (4*i);
+			dataframes[i].data.pix5 = 6 + (4*i);
+			dataframes[i].data.pix6 = 7 + (4*i);
+			dataframes[i].data.pix7 = 8 + (4*i);
 		}
 
 
