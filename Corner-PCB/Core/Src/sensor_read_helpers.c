@@ -68,35 +68,31 @@ void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAM
 }
 
 void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
+    if (HAL_GetTick() - *lastReadMS >= WHEEL_SPEED_SAMPLE_PERIOD) {
 
-	if(HAL_GetTick() - *lastReadMS > WHEEL_SPEED_SAMPLE_PERIOD){
+        uint32_t edges = 0;
+        uint8_t prevWHSLogicLevel = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+        uint32_t readBeginMS = HAL_GetTick();
 
-		uint8_t prevWHSLogicLevel = GPIO_PIN_RESET;
-		uint8_t edges = 0;
-		uint8_t readBeginMS = HAL_GetTick(); //possilbly a good idea to lower tick period to like 10us or sth
-		for (int i = 0; i < 1000; i++) {//burst read 100 values real quick, find how many times polarity switches
+        for (int i = 0; i < 1000; i++) {
+            uint8_t currentLevel = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+            if (currentLevel != prevWHSLogicLevel) {
+                edges++;
+                prevWHSLogicLevel = currentLevel;
+            }
+        }
 
-			/* if whs pin is logic high and prev_whs_logic_level is opposite, add one to edges */
+        uint32_t readEndMS = HAL_GetTick();
+        uint32_t deltaMS = readEndMS - readBeginMS;
+        if (deltaMS == 0) deltaMS = 1; // Prevent divide by zero
 
-			if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) != prevWHSLogicLevel) {
-				edges++;
-				prevWHSLogicLevel = !prevWHSLogicLevel;
-			}
-		}
+        float rpm = ((float)edges / (float)deltaMS) * (60000.0f / 24.0f);
+        dataframe->data.wheelRPM = (uint16_t)rpm;
 
-		uint8_t readEndMS = HAL_GetTick();
-
-		//convert to rpm
-		/*
-		 * edges/msec * 1/(edges/rotation) * msec/sec = rotations/msec
-		 * 1/(edges/rotation) * msec/sec = 1/24 * 1/1000 =
-		 */
-		dataframe->data.wheelRPM = ( ((float)(edges)) / ((float)(readEndMS)-(float)(readBeginMS)) ) * (float)(1/24000);
-
-
-		*lastReadMS = HAL_GetTick();
-	}
+        *lastReadMS = HAL_GetTick();
+    }
 }
+
 
 void readBoardTemp(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
 
