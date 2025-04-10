@@ -6,26 +6,29 @@
  */
 
 #include "sensor_read_helpers.h"
+#include <stdio.h>
 
-void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MISC_DATAFRAME *dataframe) {
-	uint32_t ADC_Read[1];
-	uint32_t ADC_BUFFER = 1;
-	//		HAL_ADC_PollForConversion(&hadc1, 100);
-	//		lin_pot_val = HAL_ADC_GetValue(&hadc1);
 
-	HAL_ADC_Start_DMA(hadc, ADC_Read, ADC_BUFFER);
-	if(HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD){
-		dataframe->data.shockTravel = ADC_Read[0];
+void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
+	if (HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD) {
 
-		*lastReadMS = HAL_GetTick();
+		HAL_ADC_Start(hadc);
+		if (HAL_ADC_PollForConversion(hadc, 10) == HAL_OK) {
+			uint32_t adc_val = HAL_ADC_GetValue(hadc);
+			HAL_ADC_Stop(hadc);
+
+			uint16_t scaled_travel = (uint16_t)((adc_val * 65535UL) / 4095);
+			dataframe->data.shockTravel = scaled_travel;
+
+			*lastReadMS = HAL_GetTick();
+		} else {
+			HAL_ADC_Stop(hadc);
+		}
 	}
-
-	//todo: convert counts to travel
 }
 
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe, UART_HandleTypeDef *uartPort) {
 	uint8_t txData[8];
-
 
 	if(HAL_GetTick() - *lastReadMS > BRAKE_TEMP_SAMPLE_PERIOD){
 		//send data
@@ -85,35 +88,35 @@ void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAM
 }
 
 void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
+    static uint32_t edgeCount = 0;
+    static uint32_t sampleStartTime = 0;
+    static uint8_t prevLevel = 0;
+    const uint32_t sampleWindowMS = 200;
+    const uint32_t edgesPerRev = 24;
 
-	if(HAL_GetTick() - *lastReadMS > WHEEL_SPEED_SAMPLE_PERIOD){
+    uint32_t now = HAL_GetTick();
 
-		uint8_t prevWHSLogicLevel = GPIO_PIN_RESET;
-		uint8_t edges = 0;
-		uint8_t readBeginMS = HAL_GetTick(); //possilbly a good idea to lower tick period to like 10us or sth
-		for (int i = 0; i < 1000; i++) {//burst read 100 values real quick, find how many times polarity switches
+    if ((now - sampleStartTime) >= sampleWindowMS) {
+        float rotations = (float)edgeCount / (float)edgesPerRev;
+        float rpm = rotations * (60000.0f / sampleWindowMS);
 
-			/* if whs pin is logic high and prev_whs_logic_level is opposite, add one to edges */
+        dataframe->data.wheelRPM = (uint16_t)rpm;
 
-			if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) != prevWHSLogicLevel) {
-				edges++;
-				prevWHSLogicLevel = !prevWHSLogicLevel;
-			}
-		}
+        edgeCount = 0;
+        sampleStartTime = now;
+    }
 
-		uint8_t readEndMS = HAL_GetTick();
+    uint8_t currentLevel = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+    if (currentLevel != prevLevel) {
+        edgeCount++;
+        prevLevel = currentLevel;
+    }
 
-		//convert to rpm
-		/*
-		 * edges/msec * 1/(edges/rotation) * msec/sec = rotations/msec
-		 * 1/(edges/rotation) * msec/sec = 1/24 * 1/1000 =
-		 */
-		dataframe->data.wheelRPM = ( ((float)(edges)) / ((float)(readEndMS)-(float)(readBeginMS)) ) * (float)(1/24000);
-
-
-		*lastReadMS = HAL_GetTick();
-	}
+    *lastReadMS = now;
 }
+
+
+
 
 void readBoardTemp(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
 
