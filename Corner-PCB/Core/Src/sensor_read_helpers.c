@@ -9,21 +9,26 @@
 #include <stdio.h>
 
 
-void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MISC_DATAFRAME *dataframe) {
-	uint32_t ADC_Read[1];
-	uint32_t ADC_BUFFER = 1;
-	//		HAL_ADC_PollForConversion(&hadc1, 100);
-	//		lin_pot_val = HAL_ADC_GetValue(&hadc1);
+void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
+	if (HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD) {
 
-	HAL_ADC_Start_DMA(hadc, ADC_Read, ADC_BUFFER);
-	if(HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD){
-		dataframe->data.shockTravel = ADC_Read[0];
+		HAL_ADC_Start(hadc);
+		if (HAL_ADC_PollForConversion(hadc, 10) == HAL_OK) {
+			uint32_t adc_val = HAL_ADC_GetValue(hadc);
+			HAL_ADC_Stop(hadc);
 
-		*lastReadMS = HAL_GetTick();
+			uint16_t scaled_travel = (uint16_t)((adc_val * 65535UL) / 4095);
+			dataframe->data.shockTravel = scaled_travel;
+
+			*lastReadMS = HAL_GetTick();
+		} else {
+			HAL_ADC_Stop(hadc);
+		}
 	}
-
-	//todo: convert counts to travel
 }
+
+
+
 
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
 
@@ -83,7 +88,6 @@ void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
         float rpm = rotations * (60000.0f / sampleWindowMS);
 
         dataframe->data.wheelRPM = (uint16_t)rpm;
-        printf("Edges: %lu, RPM: %.2f\r\n", edgeCount, rpm);
 
         edgeCount = 0;
         sampleStartTime = now;

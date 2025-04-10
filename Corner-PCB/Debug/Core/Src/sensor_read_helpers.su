@@ -1,6 +1,6 @@
 ../Core/Src/sensor_read_helpers.c:12:6:readLinearPotentiometer	32	static
-../Core/Src/sensor_read_helpers.c:28:6:readBrakeTemp	16	static
-../Core/Src/sensor_read_helpers.c:39:6:readTireTemp	24	static
-../Core/Src/sensor_read_helpers.c:58:6:readStrainGauges	24	static
-../Core/Src/sensor_read_helpers.c:72:6:readWheelSpeed	48	static
-../Core/Src/sensor_read_helpers.c:104:6:readBoardTemp	24	static
+../Core/Src/sensor_read_helpers.c:33:6:readBrakeTemp	16	static
+../Core/Src/sensor_read_helpers.c:44:6:readTireTemp	24	static
+../Core/Src/sensor_read_helpers.c:63:6:readStrainGauges	24	static
+../Core/Src/sensor_read_helpers.c:77:6:readWheelSpeed	40	static
+../Core/Src/sensor_read_helpers.c:108:6:readBoardTemp	24	static
