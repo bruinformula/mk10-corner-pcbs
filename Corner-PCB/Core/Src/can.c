@@ -27,10 +27,10 @@ HAL_StatusTypeDef CANTransmitMinion (CAN_HandleTypeDef *canport, CAN_TxHeaderTyp
 		i++;
 	}
 
-	if (TXStatusOut != HAL_OK) {
-		mailbox = 0;
-
-	}
+//	if (TXStatusOut != HAL_OK) {
+//		mailbox = 0;
+//
+//	}
 	//	printf("\n\r");
 	return TXStatusOut;
 }
