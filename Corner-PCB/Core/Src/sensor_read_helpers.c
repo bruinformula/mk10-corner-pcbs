@@ -39,9 +39,9 @@ void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe, UART_HandleT
 			txData[3] = 0x02;
 			txData[4] = 0;
 			txData[5] = 0x01;
-			uint16_t crc = computeCRC16(txData, 6);
-			txData[6] = crc & 0xFF;
-			txData[7] = (crc >> 8) & 0xFF;
+//			uint16_t crc = computeCRC16(txData, 6);
+			txData[6] = 0xFF;
+			txData[7] = 0xFF;
 
 
 
