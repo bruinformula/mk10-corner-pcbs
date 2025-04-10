@@ -1,0 +1,3 @@
+../Core/Src/can.c:13:19:CANTransmitMinion	40	static
+../Core/Src/can.c:38:6:clearEflagsHelper	16	static
+../Core/Src/can.c:50:6:CANMailman	32	static

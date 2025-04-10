@@ -59,9 +59,10 @@ UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
-union SG_DATAFRAME sg_dataframe;
-union TTEMP_DATAFRAME ttemp_dataframes[4];
-union MISC_DATAFRAME misc_dataframe;
+struct CORNER_CAN_CONTEXT CANCONTEXT;
+//union SG_DATAFRAME sg_dataframe;
+//union TTEMP_DATAFRAME ttemp_dataframes[4];
+//union MISC_DATAFRAME misc_dataframe;
 
 /* private variables to keep track of when last read was */
 uint32_t ms_since_linpot_read;
@@ -104,150 +105,7 @@ static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN 0 */
 
 
-HAL_StatusTypeDef CANTransmitMinion (CAN_HandleTypeDef *canport, CAN_TxHeaderTypeDef *header, uint8_t *dataArray) {
 
-	HAL_StatusTypeDef TXStatusOut = HAL_ERROR;
-	//	printf("sending ID ");
-	//	printf((uint32_t)(header->StdId));
-	int i = 0;
-	uint32_t mailbox = 0;
-	while (i < CAN_RETRY_LIMIT && TXStatusOut != HAL_OK) {
-		while(HAL_CAN_GetTxMailboxesFreeLevel(&hcan1) < 1) {
-					//wait until a new mailbox gets freed up
-		//			printf("\n\rwaiting\n\r");
-				}
-		TXStatusOut = HAL_CAN_AddTxMessage(canport, header, dataArray, &mailbox);
-
-		i++;
-	}
-
-	if (TXStatusOut != HAL_OK) {
-		mailbox = 0;
-
-	}
-	//	printf("\n\r");
-	return TXStatusOut;
-}
-
-void clearEflagsHelper(void) {
-	misc_dataframe.data.eflags.ADCErrorBit = 0;
-	misc_dataframe.data.eflags.BrakeTempErrorBit = 0;
-	misc_dataframe.data.eflags.SGMsgErrorBit = 0;
-	misc_dataframe.data.eflags.MiscMsgErrorBit = 0;
-	misc_dataframe.data.eflags.TTempMsg1ErrorBit = 0;
-	misc_dataframe.data.eflags.TTempMsg2ErrorBit = 0;
-	misc_dataframe.data.eflags.TTempMsg3ErrorBit = 0;
-	misc_dataframe.data.eflags.TTempMsg4ErrorBit = 0;
-
-}
-
-void CANMailman(void) {
-	clearEflagsHelper();
-	HAL_StatusTypeDef txstatus;
-	/*** BEGIN SEND MISC MESSAGE (btemp, whs, board temp, error flags, shock travel) */
-
-	if (HAL_GetTick() - ms_since_miscmsg_broadcast > MISC_DATA_TRANSMISSION_PERIOD) {
-		CTXHeader.StdId = MISC_DATA_ID;
-		txstatus = CANTransmitMinion(&hcan1, &CTXHeader, misc_dataframe.array);
-
-		//set error flag
-		if (txstatus != HAL_OK) {
-			misc_dataframe.data.eflags.MiscMsgErrorBit = true;
-		}
-
-		ms_since_miscmsg_broadcast = HAL_GetTick();
-	}
-	/*** BEGIN SEND MISC MESSAGE (btemp, whs, board temp, error flags, shock travel) */
-
-
-
-
-	/**** BEGIN SEND STRAIN GAUGE DATA ****/
-	if (HAL_GetTick() - ms_since_strain_broadcast > STRAIN_GAUGE_TRANSMISSION_PERIOD) {
-		CTXHeader.StdId = STRAIN_GAUGE_ID;
-		txstatus = CANTransmitMinion (&hcan1, &CTXHeader, sg_dataframe.array);
-
-		//set error flag
-		if (txstatus != HAL_OK) {
-			misc_dataframe.data.eflags.SGMsgErrorBit = true;
-		}
-
-		ms_since_strain_broadcast = HAL_GetTick();
-
-	}
-	/**** END SEND STRAIN GAUGE DATA ****/
-
-
-
-	uint32_t tick = HAL_GetTick();
-	/**** BEGIN SEND TIRE TEMP DATA ****/
-	if (tick - ms_since_ttemp_broadcast > TIRE_TEMP_TRANSMISSION_PERIOD) {
-
-		//		CTXHeader.IDE = CAN_ID_STD;
-		//		CTXHeader.RTR = CAN_RTR_DATA;
-		//		CTXHeader.DLC = 8;
-		//		ms_since_ttemp_broadcast = HAL_GetTick();
-
-		CAN_TxHeaderTypeDef head = CTXHeader;
-		CTXHeader.StdId = TIRE_TEMP_MSG1_ID;
-		txstatus = CANTransmitMinion (&hcan1, &CTXHeader, ttemp_dataframes[0].array);
-		if (txstatus != HAL_OK) {
-			misc_dataframe.data.eflags.TTempMsg1ErrorBit = true;
-		}
-
-		CTXHeader.StdId = TIRE_TEMP_MSG2_ID;
-		txstatus = CANTransmitMinion (&hcan1, &CTXHeader, ttemp_dataframes[1].array);
-		if (txstatus != HAL_OK) {
-			misc_dataframe.data.eflags.TTempMsg2ErrorBit = true;
-		}
-
-		CTXHeader.StdId = TIRE_TEMP_MSG3_ID;
-		txstatus = CANTransmitMinion (&hcan1, &CTXHeader, ttemp_dataframes[2].array);
-		if (txstatus != HAL_OK) {
-			misc_dataframe.data.eflags.TTempMsg3ErrorBit = true;
-		}
-
-		CTXHeader.StdId = TIRE_TEMP_MSG4_ID;
-		txstatus = CANTransmitMinion (&hcan1, &CTXHeader, ttemp_dataframes[3].array);
-		if (txstatus != HAL_OK) {
-			misc_dataframe.data.eflags.TTempMsg4ErrorBit = true;
-		}
-
-		ms_since_ttemp_broadcast = HAL_GetTick();
-	}
-
-	/**** END SEND TIRE TEMP DATA ****/
-}
-
-/*
-uint32_t lastCanSpam = 0;
-//uint32_t mailbox = 0;
-uint8_t penis[] = {0x66, 0x75, 0x63, 0x6B, 0x66, 0x61, 0x63, 0x65};
-//CAN_TxHeaderTypeDef CTXHeader;
-void spamCan(void) {
-	if(HAL_GetTick() - lastCanSpam >= 100 ){ //scuffed but itll work for testing
-		CTXHeader.StdId = 0x600;
-		//		CTXHeader.ExtId = 0x1AAAAAA;
-		CTXHeader.IDE = CAN_ID_STD;
-		CTXHeader.RTR = CAN_RTR_DATA;
-		CTXHeader.DLC = 8;
-		//		CTXHeader.TransmitGlobalTime = DISABLE;
-
-		//printf("SPAM CAN\n\r");
-		//
-		uint32_t mailbox = 0;
-		HAL_StatusTypeDef status = HAL_TIMEOUT;
-		int i = 0;
-		while (i < CAN_RETRY_LIMIT && status != HAL_OK) {
-			status = HAL_CAN_AddTxMessage(&hcan1, &CTXHeader, penis, &mailbox);
-
-			i ++;
-		}
-
-		lastCanSpam = HAL_GetTick();
-	}
-}
- */
 
 
 
@@ -292,23 +150,7 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 	//  HAL_ADC_Start(&hadc1);
-	/* INITIALIZE CAN PARAMETERS */
-	CAN_FilterTypeDef sFilterConfig;
-	sFilterConfig.FilterBank = 1;                       // value between 0 to 13 for JUST Master Mode (CAN1)
-	sFilterConfig.FilterMode = CAN_FILTERMODE_IDLIST;   // for filtering Identifiers
-	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;  // for Scaling filtering (if use EXTENDED CAN this must be 32BIT)
-	sFilterConfig.FilterIdHigh = (0x541) << 5;          // First Identifier MSB value for receiving in IDLIST Mode for 32BIT Scaling
-	sFilterConfig.FilterIdLow = 0x00;                   // First Identifier LSB value for receiving in IDLIST Mode for 32BIT Scaling
-	sFilterConfig.FilterMaskIdHigh = 0x00;              // Second Identifier MSB value for receiving in IDLIST Mode for 32BIT Scaling
-	sFilterConfig.FilterMaskIdLow = 0x00;               // Second Identifier LSB value for receiving in IDLIST Mode for 32BIT Scaling
-	sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;  // specify FIFO0 or FIFO1
-	sFilterConfig.FilterActivation = CAN_FILTER_DISABLE; // Enable filtering
 
-	CTXHeader.IDE = CAN_ID_STD;
-	CTXHeader.RTR = CAN_RTR_DATA;
-	CTXHeader.DLC = 8;
-	HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig);
-	HAL_CAN_Start(&hcan1);
 
   /* USER CODE END 2 */
 
@@ -323,16 +165,16 @@ int main(void)
 		//		spamCan();
 
 		//read the sensors
-		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &misc_dataframe);
-		readBrakeTemp(&ms_since_btemp_read, &misc_dataframe);
-		readTireTemp(&ms_since_ttemp_read, ttemp_dataframes);
-		readStrainGauges(&hspi1, &ms_since_strain_read, &sg_dataframe);
-		readWheelSpeed(&ms_since_whs_read, &misc_dataframe);
-		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &misc_dataframe);
+		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
+		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
+		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
+		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
+		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
+		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &(CANCONTEXT.misc_dataframe));
 
 
 		//send out the sensors
-		CANMailman();
+		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
 
     /* USER CODE END WHILE */
 
@@ -480,6 +322,24 @@ static void MX_CAN1_Init(void)
     Error_Handler();
   }
   /* USER CODE BEGIN CAN1_Init 2 */
+
+  /* INITIALIZE CAN PARAMETERS */
+	CAN_FilterTypeDef sFilterConfig;
+	sFilterConfig.FilterBank = 1;                       // value between 0 to 13 for JUST Master Mode (CAN1)
+	sFilterConfig.FilterMode = CAN_FILTERMODE_IDLIST;   // for filtering Identifiers
+	sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;  // for Scaling filtering (if use EXTENDED CAN this must be 32BIT)
+	sFilterConfig.FilterIdHigh = (0x541) << 5;          // First Identifier MSB value for receiving in IDLIST Mode for 32BIT Scaling
+	sFilterConfig.FilterIdLow = 0x00;                   // First Identifier LSB value for receiving in IDLIST Mode for 32BIT Scaling
+	sFilterConfig.FilterMaskIdHigh = 0x00;              // Second Identifier MSB value for receiving in IDLIST Mode for 32BIT Scaling
+	sFilterConfig.FilterMaskIdLow = 0x00;               // Second Identifier LSB value for receiving in IDLIST Mode for 32BIT Scaling
+	sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;  // specify FIFO0 or FIFO1
+	sFilterConfig.FilterActivation = CAN_FILTER_DISABLE; // Enable filtering
+
+	CTXHeader.IDE = CAN_ID_STD;
+	CTXHeader.RTR = CAN_RTR_DATA;
+	CTXHeader.DLC = 8;
+	HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig);
+	HAL_CAN_Start(&hcan1);
   /* USER CODE END CAN1_Init 2 */
 
 }

@@ -5,8 +5,14 @@
  *      Author: wony tang
  */
 
-#ifndef INC_CONSTANTS_H_
-#define INC_CONSTANTS_H_
+#ifndef INC_CAN_H_
+#define INC_CAN_H_
+
+#include "stm32l4xx_hal.h"
+#include "stm32l4xx_hal_can.h"
+#include "stm32l4xx_hal_conf.h"
+#include "dataframes.h"
+
 
 /* CAN ID shit*/
 #define CORNER_NUMBER 1
@@ -21,20 +27,20 @@
 #define CAN_RETRY_LIMIT 3
 
 /* start transmission rates (ms) */
-#define STRAIN_GAUGE_TRANSMISSION_PERIOD 	2
+#define STRAIN_GAUGE_TRANSMISSION_PERIOD 	3
 #define TIRE_TEMP_TRANSMISSION_PERIOD 		501
 #define MISC_DATA_TRANSMISSION_PERIOD 		21
 /* end transmission rates */
 
 
 /* start sampling rates (ms) */
-#define STRAIN_GAUGE_SAMPLE_PERIOD 		2
+#define STRAIN_GAUGE_SAMPLE_PERIOD 		3
 #define TIRE_TEMP_SAMPLE_PERIOD 		501
 #define WHEEL_SPEED_SAMPLE_PERIOD 		11 //this is how long it outputs an actual speed
 #define BRAKE_TEMP_SAMPLE_PERIOD		101
 #define SHOCK_TRAVEL_SAMPLE_PERIOD		21
 #define BOARD_TEMP_SAMPLE_PERIOD		1001
-/* start sampling rates */
+/* end sampling rates */
 
 
 //these exist to effectively put more decimal points in a byte datafield
@@ -45,9 +51,9 @@
 #define BRAKE_TEMP_SF		10
 #define SHOCK_TRAVEL_SF		1000
 #define BOARD_TEMP_SF		1000
-/* start sampling rates */
+/* end scaling factors */
 
+/* method declarations */
+void CANMailman(CAN_HandleTypeDef *canport, CAN_TxHeaderTypeDef *header, CORNER_CAN_CONTEXT *CANCONTEXT);
 
-
-
-#endif /* INC_CONSTANTS_H_ */
+#endif /* INC_CAN_H_*/

@@ -10,6 +10,8 @@
 
 #include <stdbool.h>
 
+
+
 /* start unions for dataframes */
 
 typedef union SG_DATAFRAME{
@@ -44,18 +46,32 @@ typedef union MISC_DATAFRAME {
 		uint16_t shockTravel; //shock travel * 1000
 		uint8_t boardTemp; //board temp * 2
 		struct {
-			bool ADCErrorBit			: 1;
-			bool BrakeTempErrorBit		: 1;
-			bool MiscMsgErrorBit 		: 1;
-			bool SGMsgErrorBit	 		: 1;
-			bool TTempMsg1ErrorBit 		: 1;
-			bool TTempMsg2ErrorBit 		: 1;
-			bool TTempMsg3ErrorBit		: 1;
-			bool TTempMsg4ErrorBit		: 1;
+			uint8_t ADCErrorBit				: 1;
+			uint8_t BrakeTempErrorBit		: 1;
+			uint8_t MiscMsgErrorBit 		: 1;
+			uint8_t SGMsgErrorBit	 		: 1;
+			uint8_t TTempMsg1ErrorBit 		: 1;
+			uint8_t TTempMsg2ErrorBit 		: 1;
+			uint8_t TTempMsg3ErrorBit		: 1;
+			uint8_t TTempMsg4ErrorBit		: 1;
 		} eflags;
 	} data;
 	uint8_t array[8];
 } MISC_DATAFRAME;
+
+
+typedef struct CORNER_CAN_CONTEXT {
+
+	uint32_t ms_since_strain_broadcast;
+	SG_DATAFRAME straingauge_dataframe;
+
+	uint32_t ms_since_ttemp_broadcast;
+	TTEMP_DATAFRAME ttemp_dataframes[4];
+
+	uint32_t ms_since_miscmsg_broadcast;
+	MISC_DATAFRAME misc_dataframe;
+
+} CORNER_CAN_CONTEXT;
 
 /* end unions for dataframes */
 
