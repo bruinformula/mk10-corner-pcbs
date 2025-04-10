@@ -166,7 +166,7 @@ int main(void)
 
 		//read the sensors
 		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
-		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe), &huart1);
+//		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe), &huart1);
 		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
 		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
 		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
