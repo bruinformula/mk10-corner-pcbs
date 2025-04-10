@@ -6,6 +6,8 @@
  */
 
 #include "sensor_read_helpers.h"
+#include <stdio.h>
+
 
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MISC_DATAFRAME *dataframe) {
 	uint32_t ADC_Read[1];
@@ -68,30 +70,35 @@ void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAM
 }
 
 void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
-    if (HAL_GetTick() - *lastReadMS >= WHEEL_SPEED_SAMPLE_PERIOD) {
+    static uint32_t edgeCount = 0;
+    static uint32_t sampleStartTime = 0;
+    static uint8_t prevLevel = 0;
+    const uint32_t sampleWindowMS = 200;
+    const uint32_t edgesPerRev = 24;
 
-        uint32_t edges = 0;
-        uint8_t prevWHSLogicLevel = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
-        uint32_t readBeginMS = HAL_GetTick();
+    uint32_t now = HAL_GetTick();
 
-        for (int i = 0; i < 1000; i++) {
-            uint8_t currentLevel = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
-            if (currentLevel != prevWHSLogicLevel) {
-                edges++;
-                prevWHSLogicLevel = currentLevel;
-            }
-        }
+    if ((now - sampleStartTime) >= sampleWindowMS) {
+        float rotations = (float)edgeCount / (float)edgesPerRev;
+        float rpm = rotations * (60000.0f / sampleWindowMS);
 
-        uint32_t readEndMS = HAL_GetTick();
-        uint32_t deltaMS = readEndMS - readBeginMS;
-        if (deltaMS == 0) deltaMS = 1; // Prevent divide by zero
-
-        float rpm = ((float)edges / (float)deltaMS) * (60000.0f / 24.0f);
         dataframe->data.wheelRPM = (uint16_t)rpm;
+        printf("Edges: %lu, RPM: %.2f\r\n", edgeCount, rpm);
 
-        *lastReadMS = HAL_GetTick();
+        edgeCount = 0;
+        sampleStartTime = now;
     }
+
+    uint8_t currentLevel = HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4);
+    if (currentLevel != prevLevel) {
+        edgeCount++;
+        prevLevel = currentLevel;
+    }
+
+    *lastReadMS = now;
 }
+
+
 
 
 void readBoardTemp(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
