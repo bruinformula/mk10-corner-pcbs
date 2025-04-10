@@ -37,7 +37,7 @@
 #define STRAIN_GAUGE_SAMPLE_PERIOD 		3
 #define TIRE_TEMP_SAMPLE_PERIOD 		501
 #define WHEEL_SPEED_SAMPLE_PERIOD 		11 //this is how long it outputs an actual speed
-#define BRAKE_TEMP_SAMPLE_PERIOD		101
+#define BRAKE_TEMP_SAMPLE_PERIOD		200
 #define SHOCK_TRAVEL_SAMPLE_PERIOD		21
 #define BOARD_TEMP_SAMPLE_PERIOD		1001
 /* end sampling rates */

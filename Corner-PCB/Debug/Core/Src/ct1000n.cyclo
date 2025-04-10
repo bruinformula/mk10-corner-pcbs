@@ -1,0 +1,2 @@
+../Core/Src/ct1000n.c:13:19:sendBrakeTempData	1
+../Core/Src/ct1000n.c:83:10:computeCRC16	2

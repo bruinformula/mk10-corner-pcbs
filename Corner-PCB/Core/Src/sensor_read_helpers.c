@@ -23,12 +23,29 @@ void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MIS
 	//todo: convert counts to travel
 }
 
-void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
+void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe, UART_HandleTypeDef *uartPort) {
+	uint8_t txData[8];
+
 
 	if(HAL_GetTick() - *lastReadMS > BRAKE_TEMP_SAMPLE_PERIOD){
-		dataframe->data.brakeTemp = 0;
-		//todo: actual brake temp sensor read code
-		*lastReadMS = HAL_GetTick();
+		//send data
+//		for (int i = 1; i < 200; i++) {
+			txData[0] = 1;
+			txData[1] = 0x03;
+			txData[2] = 0;
+			txData[3] = 0x02;
+			txData[4] = 0;
+			txData[5] = 0x01;
+			uint16_t crc = computeCRC16(txData, 6);
+			txData[6] = crc & 0xFF;
+			txData[7] = (crc >> 8) & 0xFF;
+
+
+
+			dataframe->data.brakeTemp = sendBrakeTempData(txData, uartPort);
+			//todo: actual brake temp sensor read code
+			*lastReadMS = HAL_GetTick();
+//		}
 	}
 
 	//todo: convert to deg C

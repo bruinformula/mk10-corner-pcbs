@@ -166,7 +166,7 @@ int main(void)
 
 		//read the sensors
 		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
-		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
+		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe), &huart1);
 		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
 		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
 		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
@@ -495,7 +495,7 @@ static void MX_USART1_UART_Init(void)
 
   /* USER CODE END USART1_Init 1 */
   huart1.Instance = USART1;
-  huart1.Init.BaudRate = 115200;
+  huart1.Init.BaudRate = 19200;
   huart1.Init.WordLength = UART_WORDLENGTH_8B;
   huart1.Init.StopBits = UART_STOPBITS_1;
   huart1.Init.Parity = UART_PARITY_NONE;

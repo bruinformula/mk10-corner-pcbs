@@ -1,5 +1,5 @@
-Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
- ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
+Core/Src/ct1000n.o: ../Core/Src/ct1000n.c ../Core/Inc/ct1000n.h \
+ ../Core/Inc/main.h ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h \
@@ -37,7 +37,8 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
  ../Core/Inc/stm32l4xx_hal_conf.h ../Core/Inc/can.h \
  ../Core/Inc/dataframes.h ../Core/Inc/sensor_read_helpers.h \
- ../Core/Inc/main.h ../Core/Inc/ct1000n.h
+ ../Core/Inc/ct1000n.h
+../Core/Inc/ct1000n.h:
 ../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
@@ -79,5 +80,4 @@ Core/Src/main.o: ../Core/Src/main.c ../Core/Inc/main.h \
 ../Core/Inc/can.h:
 ../Core/Inc/dataframes.h:
 ../Core/Inc/sensor_read_helpers.h:
-../Core/Inc/main.h:
 ../Core/Inc/ct1000n.h:

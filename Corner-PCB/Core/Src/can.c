@@ -59,6 +59,8 @@ void CANMailman(CAN_HandleTypeDef *canport, CAN_TxHeaderTypeDef *header, CORNER_
 		//set error flag
 		if (txstatus != HAL_OK) {
 			CANCONTEXT->misc_dataframe.data.eflags.MiscMsgErrorBit = true;
+		} else {
+			CANCONTEXT->misc_dataframe.data.eflags.MiscMsgErrorBit = false;
 		}
 
 		CANCONTEXT->ms_since_miscmsg_broadcast = HAL_GetTick();
@@ -76,6 +78,8 @@ void CANMailman(CAN_HandleTypeDef *canport, CAN_TxHeaderTypeDef *header, CORNER_
 		//set error flag
 		if (txstatus != HAL_OK) {
 			CANCONTEXT->misc_dataframe.data.eflags.SGMsgErrorBit = true;
+		} else {
+			CANCONTEXT->misc_dataframe.data.eflags.SGMsgErrorBit = false;
 		}
 
 		CANCONTEXT->ms_since_strain_broadcast = HAL_GetTick();
@@ -97,24 +101,32 @@ void CANMailman(CAN_HandleTypeDef *canport, CAN_TxHeaderTypeDef *header, CORNER_
 		txstatus = CANTransmitMinion (canport, header, CANCONTEXT->ttemp_dataframes[0].array);
 		if (txstatus != HAL_OK) {
 			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg1ErrorBit = true;
+		} else {
+			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg1ErrorBit = false;
 		}
 
 		header->StdId = TIRE_TEMP_MSG2_ID;
 		txstatus = CANTransmitMinion (canport, header, CANCONTEXT->ttemp_dataframes[1].array);
 		if (txstatus != HAL_OK) {
 			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg2ErrorBit = true;
+		} else {
+			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg2ErrorBit = false;
 		}
 
 		header->StdId = TIRE_TEMP_MSG3_ID;
 		txstatus = CANTransmitMinion (canport, header, CANCONTEXT->ttemp_dataframes[2].array);
 		if (txstatus != HAL_OK) {
 			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg3ErrorBit = true;
+		} else {
+			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg3ErrorBit = false;
 		}
 
 		header->StdId = TIRE_TEMP_MSG4_ID;
 		txstatus = CANTransmitMinion (canport, header, CANCONTEXT->ttemp_dataframes[3].array);
 		if (txstatus != HAL_OK) {
 			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg4ErrorBit = true;
+		} else {
+			CANCONTEXT->misc_dataframe.data.eflags.TTempMsg4ErrorBit = false;
 		}
 
 		CANCONTEXT->ms_since_ttemp_broadcast = HAL_GetTick();
