@@ -1,5 +1,6 @@
 Core/Src/sensor_read_helpers.o: ../Core/Src/sensor_read_helpers.c \
- ../Core/Inc/sensor_read_helpers.h \
+ ../Core/Inc/sensor_read_helpers.h ../Core/Inc/dataframes.h \
+ ../Core/Inc/MLX90640_API.h ../Core/Inc/adc.h ../Core/Inc/main.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h \
  ../Core/Inc/stm32l4xx_hal_conf.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h \
@@ -36,9 +37,12 @@ Core/Src/sensor_read_helpers.o: ../Core/Src/sensor_read_helpers.c \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h \
  ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h \
- ../Core/Inc/stm32l4xx_hal_conf.h ../Core/Inc/main.h ../Core/Inc/can.h \
- ../Core/Inc/dataframes.h ../Core/Inc/sensor_read_helpers.h
+ ../Core/Inc/spi.h ../Core/Inc/can.h
 ../Core/Inc/sensor_read_helpers.h:
+../Core/Inc/dataframes.h:
+../Core/Inc/MLX90640_API.h:
+../Core/Inc/adc.h:
+../Core/Inc/main.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal.h:
 ../Core/Inc/stm32l4xx_hal_conf.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_rcc.h:
@@ -75,8 +79,5 @@ Core/Src/sensor_read_helpers.o: ../Core/Src/sensor_read_helpers.c \
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_tim_ex.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h:
 ../Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart_ex.h:
-../Core/Inc/stm32l4xx_hal_conf.h:
-../Core/Inc/main.h:
+../Core/Inc/spi.h:
 ../Core/Inc/can.h:
-../Core/Inc/dataframes.h:
-../Core/Inc/sensor_read_helpers.h:

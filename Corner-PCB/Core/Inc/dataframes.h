@@ -8,12 +8,23 @@
 #ifndef INC_DATAFRAMES_H_
 #define INC_DATAFRAMES_H_
 
-#include <stdbool.h>
-
-
-
 /* start unions for dataframes */
+#include "stdbool.h"
+#include "stdint.h"
+#include "MLX90640_API.h"
 
+// Tire Temp (MLX90640) Initialization Data
+#define MLX_ADDR 0x33
+#define REFRESH_RATE 0x02
+#define TA_SHIFT 8
+#define EMISSIVITY 0.95
+extern uint16_t MLX_eeData[832];
+extern paramsMLX90640 MLX_params;
+extern uint16_t MLX_dataFrame[834];
+extern float MLX_to[768];
+extern uint8_t MLX_sample[32];
+
+// Actual dataframes
 typedef union SG_DATAFRAME{
 	struct {
 		uint16_t SG0; //strain gauge 0 force (N) * 10

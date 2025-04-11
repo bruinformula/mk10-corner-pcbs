@@ -1,6 +1,8 @@
-../Core/Src/sensor_read_helpers.c:11:6:readLinearPotentiometer	2
-../Core/Src/sensor_read_helpers.c:28:6:readBrakeTemp	2
-../Core/Src/sensor_read_helpers.c:39:6:readTireTemp	3
-../Core/Src/sensor_read_helpers.c:58:6:readStrainGauges	2
-../Core/Src/sensor_read_helpers.c:73:6:readWheelSpeed	4
-../Core/Src/sensor_read_helpers.c:110:6:readBoardTemp	2
+../Core/Src/sensor_read_helpers.c:19:6:initializeMLX	2
+../Core/Src/sensor_read_helpers.c:32:6:computeMLXSample	2
+../Core/Src/sensor_read_helpers.c:39:6:readLinearPotentiometer	2
+../Core/Src/sensor_read_helpers.c:56:6:readBrakeTemp	2
+../Core/Src/sensor_read_helpers.c:67:6:readTireTemp	3
+../Core/Src/sensor_read_helpers.c:91:6:readStrainGauges	2
+../Core/Src/sensor_read_helpers.c:106:6:readWheelSpeed	4
+../Core/Src/sensor_read_helpers.c:143:6:readBoardTemp	2

@@ -8,11 +8,13 @@
 #ifndef INC_SENSOR_READ_HELPERS_H_
 #define INC_SENSOR_READ_HELPERS_H_
 
+#include "dataframes.h"
+#include "stdbool.h"
+#include "adc.h"
+#include "spi.h"
 
-#include "stm32l4xx_hal.h"
-#include "stm32l4xx_hal_can.h"
-#include "stm32l4xx_hal_conf.h"
-#include "main.h"
+bool initializeMLX();
+void computeMLXSample();
 
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
