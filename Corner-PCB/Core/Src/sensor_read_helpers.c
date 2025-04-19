@@ -27,28 +27,49 @@ void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC
 	}
 }
 
+
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe, UART_HandleTypeDef *uartPort) {
 	uint8_t txData[8];
+	uint8_t rxData[8] = {0,0,0,0,0,0,0,0};
+
 
 	if(HAL_GetTick() - *lastReadMS > BRAKE_TEMP_SAMPLE_PERIOD){
 		//send data
-//		for (int i = 1; i < 200; i++) {
-			txData[0] = 1;
-			txData[1] = 0x03;
-			txData[2] = 0;
-			txData[3] = 0x02;
-			txData[4] = 0;
-			txData[5] = 0x01;
-//			uint16_t crc = computeCRC16(txData, 6);
-			txData[6] = 0xFF;
-			txData[7] = 0xFF;
+		for (uint8_t i = 1; i < 247; i++) {
+			txData[0] = 1; //ID is 1
+			txData[1] = 0x03; //function code, 0x03 is read holding regs
+			txData[2] = 0x00;
+			txData[3] = 0x02; //^ first register to be read add., relative to start add
+			txData[4] = 0x00;
+			txData[5] = 0x01; //^ how many registers to be read
+			uint16_t crc = computeCRC16(txData, 6);
+			txData[6] = crc & 0xFF; //get low part
+			txData[7] = (crc >> 8) & 0xFF; //get high part
+			//			txData[6] = 0xE4; //get low part
+			//			txData[7] = 0x39; //get high part
 
 
+			sendBrakeTempData(txData, uartPort);
 
-			dataframe->data.brakeTemp = sendBrakeTempData(txData, uartPort);
-			//todo: actual brake temp sensor read code
-			*lastReadMS = HAL_GetTick();
-//		}
+
+			HAL_Delay(30);
+			uint32_t pausechamp = HAL_GetTick();
+			HAL_StatusTypeDef status = receiveBrakeTempData(rxData,uartPort);
+			if (receiveBrakeTempData(rxData,uartPort) != HAL_OK) { //
+				dataframe->data.brakeTemp = 653;
+			}
+			for (int j = 0; j < 8; j++) {
+				if (rxData[j] != 0){
+					while(1){
+						dataframe->data.brakeTemp = 653;
+					}
+				}
+			}
+			dataframe->data.brakeTemp = 653;
+		}
+		//todo: actual brake temp sensor read code
+		*lastReadMS = HAL_GetTick();
+		//		}
 	}
 
 	//todo: convert to deg C

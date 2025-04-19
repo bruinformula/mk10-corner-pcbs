@@ -12,14 +12,23 @@
 
 HAL_StatusTypeDef sendBrakeTempData(uint8_t* data, UART_HandleTypeDef *uartPort) {
 
-	HAL_GPIO_WritePin(MAX485_EN_PORT, MAX485_EN_PIN, GPIO_PIN_RESET);
+//	HAL_GPIO_WritePin(MAX485_EN_PORT, MAX485_EN_PIN, GPIO_PIN_SET);
 	HAL_StatusTypeDef out = HAL_UART_Transmit(uartPort, data, 8, HAL_MAX_DELAY);
-	HAL_GPIO_WritePin(MAX485_EN_PORT, MAX485_EN_PIN, GPIO_PIN_SET);
-	HAL_Delay(1000);
+//	HAL_GPIO_WritePin(MAX485_EN_PORT, MAX485_EN_PIN, GPIO_PIN_RESET);
+//	HAL_Delay(1000);
 
 	return out;
 }
 
+HAL_StatusTypeDef receiveBrakeTempData(uint8_t* rxdata, UART_HandleTypeDef *uartPort) {
+
+//	HAL_GPIO_WritePin(MAX485_EN_PORT, MAX485_EN_PIN, GPIO_PIN_RESET);
+	HAL_StatusTypeDef out = HAL_UARTEx_ReceiveToIdle_IT (uartPort, rxdata, 8);
+//	HAL_GPIO_WritePin(MAX485_EN_PORT, MAX485_EN_PIN, GPIO_PIN_SET);
+//	HAL_Delay(1000);
+
+	return out;
+}
 
 static const uint8_t table_crc_hi[] = {
     0x00, 0xC1, 0x81, 0x40, 0x01, 0xC0, 0x80, 0x41, 0x01, 0xC0,

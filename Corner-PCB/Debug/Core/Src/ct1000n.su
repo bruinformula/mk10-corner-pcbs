@@ -1,2 +1,3 @@
 ../Core/Src/ct1000n.c:13:19:sendBrakeTempData	24	static
-../Core/Src/ct1000n.c:83:10:computeCRC16	24	static
+../Core/Src/ct1000n.c:23:19:receiveBrakeTempData	24	static
+../Core/Src/ct1000n.c:92:10:computeCRC16	24	static

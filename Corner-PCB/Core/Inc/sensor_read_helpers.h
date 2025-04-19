@@ -14,6 +14,18 @@
 #include "stm32l4xx_hal_conf.h"
 #include "main.h"
 #include "ct1000n.h"
+//
+//typedef union MBUS_ReadMsgTypeDef {
+//	struct {
+//		uint8_t ID;
+//		uint8_t function;
+//		uint16_t startAddress;
+//		uint16_t regCount;
+//		uint16_t crc;
+//	} data;
+//
+//
+//};
 
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe, UART_HandleTypeDef *uartPort);
