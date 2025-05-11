@@ -9,22 +9,8 @@
 #define INC_DATAFRAMES_H_
 
 /* start unions for dataframes */
-#include "stdbool.h"
 #include "stdint.h"
-#include "MLX90640_API.h"
 
-// Tire Temp (MLX90640) Initialization Data
-#define MLX_ADDR 0x33
-#define REFRESH_RATE 0x02
-#define TA_SHIFT 8
-#define EMISSIVITY 0.95
-extern uint16_t MLX_eeData[832];
-extern paramsMLX90640 MLX_params;
-extern uint16_t MLX_dataFrame[834];
-extern float MLX_to[768];
-extern uint8_t MLX_sample[32];
-
-// Actual dataframes
 typedef union SG_DATAFRAME{
 	struct {
 		uint16_t SG0; //strain gauge 0 force (N) * 10
@@ -45,7 +31,6 @@ typedef union TTEMP_DATAFRAME {
 		uint8_t pix5;
 		uint8_t pix6;
 		uint8_t pix7;
-
 	} data;
 	uint8_t array[8];
 } TTEMP_DATAFRAME;
@@ -70,14 +55,13 @@ typedef union MISC_DATAFRAME {
 	uint8_t array[8];
 } MISC_DATAFRAME;
 
-
 typedef struct CORNER_CAN_CONTEXT {
 
 	uint32_t ms_since_strain_broadcast;
 	SG_DATAFRAME straingauge_dataframe;
 
 	uint32_t ms_since_ttemp_broadcast;
-	TTEMP_DATAFRAME ttemp_dataframes[4];
+	TTEMP_DATAFRAME ttemp_dataframes[4]; // We are sending 8*4 = 32 bytes in total, for the middle row of the IR Array
 
 	uint32_t ms_since_miscmsg_broadcast;
 	MISC_DATAFRAME misc_dataframe;

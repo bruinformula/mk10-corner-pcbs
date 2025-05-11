@@ -6,58 +6,60 @@
  */
 
 #include "sensor_read_helpers.h"
-#include "stdbool.h"
-#include "can.h"
-#include "stdio.h"
 
-uint16_t MLX_eeData[832] = {0};
+ADS StrainGaugeADS;
+float crossSectionalArea = (2.19)*(0.0001);
+
+uint16_t MLX_eeData[832];
 paramsMLX90640 MLX_params;
-uint16_t MLX_dataFrame[834] = {0};
-float MLX_to[768] = {0};
-uint8_t MLX_sample[32] = {0};
+uint16_t MLX_dataFrame[834];
+float MLX_to[768];
+uint8_t MLX_sample[32];
 
-bool initializeMLX() {
-	unsigned int status;
-	MLX90640_SetRefreshRate(MLX_ADDR, REFRESH_RATE);
-	MLX90640_SetChessMode(MLX_ADDR);
-	status = MLX90640_DumpEE(MLX_ADDR, MLX_eeData);
-	printf("\r\nLOADING EEPROM PARAMETERS:%d\r\n", status);
-	status = MLX90640_ExtractParameters(MLX_eeData, &MLX_params);
-	printf("\r\nEXTRACTING PARAMETERS:%d\r\n", status);
+uint16_t adcBuffer[1];
+//float linpot_reading;
 
-	if (status == -1) return 0;
+bool initializeLinPot(ADC_HandleTypeDef* adcInstance) {
+	if (HAL_ADC_Start_DMA(adcInstance, (uint32_t*) adcBuffer, 1) != HAL_OK) {
+		return 0;
+	}
 	return 1;
 }
 
-void computeMLXSample() {
-	int startIndex = 384;
-	for (int k = 0; k < 32; k++) {
-		MLX_sample[k] = (uint8_t)(255.0f * (MLX_to[startIndex+k] + 40.0f) / 340.0f);
-	}
+bool initializeTireTemp() {
+	int status_1, status_2, status_3;
+	status_1 = MLX90640_SetChessMode(MLX_ADDR);
+	status_2 = MLX90640_DumpEE(MLX_ADDR, MLX_eeData);
+	status_3 = MLX90640_ExtractParameters(MLX_eeData, &MLX_params);
+	if (status_1 == -1 || status_2 == -1 || status_3 == -1) return 0;
+	return 1;
 }
 
+bool initializeStrainGauge(SPI_HandleTypeDef *spiInstance) {
+	bool status_1, status_2;
+	initADS(&StrainGaugeADS, spiInstance, ADS_EN_PORT, ADS_EN_PIN);
+	status_1 = enableContinuousConversion(&StrainGaugeADS);
+	status_2 = enableFSR_2048(&StrainGaugeADS);
+	return (status_1 & status_2);
+}
+
+// Read functions
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MISC_DATAFRAME *dataframe) {
-	uint32_t ADC_Read[1];
-	uint32_t ADC_BUFFER = 1;
-
-	HAL_ADC_PollForConversion(hadc, 100);
-	ADC_Read[0] = HAL_ADC_GetValue(hadc);
-
-	HAL_ADC_Start_DMA(hadc, ADC_Read, ADC_BUFFER);
-	if( HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD){
-		dataframe->data.shockTravel = ADC_Read[0];
-
+	if( HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD) {
+//		HAL_ADC_Start_DMA(hadc, (uint32_t*) adcBuffer, 1);
+//		linpot_reading = getLinPotTravel();
+//		dataframe->data.shockTravel = (uint16_t)linpot_reading;
+		dataframe->data.shockTravel = 0;
 		*lastReadMS = HAL_GetTick();
 	}
-
 	//todo: convert counts to travel
 }
 
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
-
+	// LITERALLY DOES NOT WORK
 	if(HAL_GetTick() - *lastReadMS > BRAKE_TEMP_SAMPLE_PERIOD){
 		dataframe->data.brakeTemp = 0;
-		//todo: actual brake temp sensor read code
+		//todo: actual brake temp sensor read code --> this shit is broken
 		*lastReadMS = HAL_GetTick();
 	}
 
@@ -66,11 +68,10 @@ void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
 
 void readTireTemp(uint32_t *lastReadMS, TTEMP_DATAFRAME *dataframes) {
 	if (HAL_GetTick() - *lastReadMS > TIRE_TEMP_SAMPLE_PERIOD) {
-
 		MLX90640_GetFrameData(MLX_ADDR, MLX_dataFrame);
 		float tr = MLX90640_GetTa(MLX_dataFrame, &MLX_params) - TA_SHIFT; //Reflected temperature based on the sensor ambient temperature
 		MLX90640_CalculateTo(MLX_dataFrame, &MLX_params, EMISSIVITY, tr, MLX_to);
-		computeMLXSample();
+		getMLXSample();
 
 		for (int i = 0; i < 4; i++) {
 			dataframes[i].data.pix0 = MLX_sample[0 + 8*i];
@@ -84,21 +85,29 @@ void readTireTemp(uint32_t *lastReadMS, TTEMP_DATAFRAME *dataframes) {
 		}
 
 		*lastReadMS = HAL_GetTick();
-
 	}
 }
 
 void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAME *dataframe) {
-
-
 	if(HAL_GetTick() - *lastReadMS > STRAIN_GAUGE_SAMPLE_PERIOD){
-		dataframe->data.SG0 = 0;
-		dataframe->data.SG1 = 0;
-		dataframe->data.SG2 = 0;
-		dataframe->data.SG3 = 0;
+		enableADCSensor(&StrainGaugeADS);
 
-		//todo: actual strain gauge sensor read code
-		//todo: convert counts to newtons
+		enableAINPN_0_G(&StrainGaugeADS);
+		continuousRead(&StrainGaugeADS);
+		dataframe->data.SG0 = getScaledStrainGaugeForce(StrainGaugeADS.voltage);
+
+		enableAINPN_1_G(&StrainGaugeADS);
+		continuousRead(&StrainGaugeADS);
+		dataframe->data.SG1 = getScaledStrainGaugeForce(StrainGaugeADS.voltage);
+
+		enableAINPN_2_G(&StrainGaugeADS);
+		continuousRead(&StrainGaugeADS);
+		dataframe->data.SG2 = getScaledStrainGaugeForce(StrainGaugeADS.voltage);
+
+		enableAINPN_3_G(&StrainGaugeADS);
+		continuousRead(&StrainGaugeADS);
+		dataframe->data.SG3 = getScaledStrainGaugeForce(StrainGaugeADS.voltage);
+
 		*lastReadMS = HAL_GetTick();
 	}
 }
@@ -108,25 +117,16 @@ void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
 	if(HAL_GetTick() - *lastReadMS > WHEEL_SPEED_SAMPLE_PERIOD){
 
 		uint8_t prevWHSLogicLevel = GPIO_PIN_RESET;
-
-
-
-
 		uint8_t edges = 0;
-		uint8_t readBeginMS = HAL_GetTick(); //possilbly a good idea to lower tick period to like 10us or sth
+		uint8_t readBeginMS = HAL_GetTick(); // possilbly a good idea to lower tick period to like 10us or sth
 		for (int i = 0; i < 1000; i++) {//burst read 100 values real quick, find how many times polarity switches
-
 			/* if whs pin is logic high and prev_whs_logic_level is opposite, add one to edges */
-
-			if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_4) != prevWHSLogicLevel) {
+			if (HAL_GPIO_ReadPin(WHS_IN_PORT, WHS_IN_PIN) != prevWHSLogicLevel) {
 				edges++;
 				prevWHSLogicLevel = !prevWHSLogicLevel;
 			}
 		}
-
 		uint8_t readEndMS = HAL_GetTick();
-
-
 		//convert to rpm
 		/*
 		 * edges/msec * 1/(edges/rotation) * msec/sec = rotations/msec
@@ -141,13 +141,29 @@ void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
 }
 
 void readBoardTemp(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
-
 	if(HAL_GetTick() - *lastReadMS > STRAIN_GAUGE_SAMPLE_PERIOD){
-		dataframe->data.boardTemp = 0;
-
-
-		//todo: use ads1118, same chip as the shits, to read board temp
-		//todo: convert counts to deg.C
+		enableTempSensor(&StrainGaugeADS);
+		continuousRead(&StrainGaugeADS);
+		dataframe->data.boardTemp = StrainGaugeADS.temp;
 		*lastReadMS = HAL_GetTick();
 	}
 }
+
+// Other helper functions
+void getMLXSample() {
+	for (int i = 384; i < 416; i++) {
+		MLX_sample[i - 384] = (uint8_t)MLX_to[i];
+	}
+}
+
+uint16_t getScaledStrainGaugeForce(float voltageReading) {
+	float strain = (voltageReading/3.3*SG_GF);
+	float stress = strain*YG_MODULUS;
+	return (10*stress*crossSectionalArea);
+}
+
+float getLinPotTravel() {
+	float position_mm = ((float)adcBuffer[0] / 4095.0) * LINPOT_STROKE_LENGTH;
+	return position_mm;
+}
+

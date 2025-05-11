@@ -1,139 +1,137 @@
-/*
- * ads1118.h
- *
- *  Created on: Feb 20, 2025
- *      Author: antho
- *      i really do not know what i am doing but i feel it is probably smart
- *      to have a dedicated driver file for this adc
- */
+#ifndef INC_ADS1118_H_
+#define INC_ADS1118_H_
 
-#ifndef SRC_ADS1118_H_
-#define SRC_ADS1118_H_
-#include "stm32l4xx.h"
+#include "stdint.h"
+#include "stdbool.h"
+#include "spi.h"
 
+#define CONFIG_BIT_RESV 1
 
-class ads1118 {
-public:
-	ads1118(uint_8 SPIBusPins[], bool debug);
-	ads1118(bool debug);
-	bool InitADS1118(uint_8 fsr, uint_8 datarate, bool ADCReadMode);
-	int* BurstReadSingleEndedValues(bool converted);
-	int* BurstReadDifferentialValues(bool converted);
-	//bool StartContinuousRead();
-	int* PullADCValues(bool converted, bool* newData);
-	int ReadValue(uint_8 muxCode);
-	virtual ~ads1118();
+// ADS Struct
+// Slightly altered the driver to take in a PCF8574A (GPIO Extender) Instance because it controls the chip selects
+// Possibly an issue with the "NOP" Flag?
+typedef struct ADS {
+	SPI_HandleTypeDef *hspi;
+	float FSR;
+	unsigned int SPS;
 
+	GPIO_TypeDef* GPIO_PORT;
+	uint8_t GPIO_PIN;
+	void (*cs_low)(struct ADS*);
+	void (*cs_high)(struct ADS*);
 
-	#define CONFIG_BIT_RESV 1;
-	union ADS_InitStruct {
-	    struct params{//16 bits total, 4 bytes
-	        volatile unsigned char    RESV			:1;   //low
-	        volatile unsigned char    NOP			:2;
-	        volatile unsigned char    PULLUP		:1;
-	        volatile unsigned char    TS_MODE		:1;
-	        volatile unsigned char    DATARATE		:3;
-	        volatile unsigned char    OP_MODE		:1;
-	        volatile unsigned char    PGA			:3;
-	        volatile unsigned char    MUX			:3;
-	        volatile unsigned char    SS			:1;   //high
-	    };
-	    volatile unsigned int  word; //4 bytes
-	    volatile unsigned char byte[2]; //array of 2 chars, so 2 bytes
-	};
+	uint8_t rxADS[2];
+	uint8_t rxConfig[4];
 
-	enum NOP {
-		DATA_VALID      = 0x1,
-		DATA_INVALID    = 0x2
-	};
-	enum PULLUP {
-		PUP_DISABLED	=	0x0,
-		PUP_ENABLED		=	0x1
-	};
-	enum ADSMODE {
-		CONTINUOUS	=	0x0,
-		SINGLESHOT	=	0x1
-	};
+	float voltage;
+	float temp;
 
-	enum DATARATE {
-		DR_8_SPS	=   0x0,
-		DR_16_SPS	=   0x1,
-		DR_32_SPS	=   0x2,
-		DR_64_SPS 	=   0x3,
-		DR_128_SPS	=   0x4,
-		DR_250_SPS	=   0x5,
-		DR_475_SPS	=   0x6,
-		DR_860_SPS	=   0x7
-	};
+	union {
+		uint16_t word;
+		uint8_t bytes[2];
+		struct {
+			volatile unsigned int RESV :1; // Low Bit (0)
+			volatile unsigned int NOP :2;
+			volatile unsigned int PULL_UP_EN :1;
+			volatile unsigned int TS_MODE :1;
+			volatile unsigned int DR :3;
+			volatile unsigned int MODE :1;
+			volatile unsigned int PGA :3;
+			volatile unsigned int MUX :3;
+			volatile unsigned int SS :1; // High Bit (15)
+		} bits;
+	} config;
+} ADS;
 
-	enum PGA {
-	    PGA_6144 	=	0x0,
-	    PGA_4096 	=	0x1,
-	    PGA_2048 	=	0x2,
-	    PGA_1024 	=	0x3,
-	    PGA_512 	=	0x4,
-	    PGA_256 	=	0x5
-	};
+// Config Register
+typedef enum SS {
+	STOPPED = 0x0, START = 0x1
+} SS;
+typedef enum MUX {
+	AINPN_0_1 = 0b000,
+	AINPN_0_3 = 0b001,
+	AINPN_1_3 = 0b010,
+	AINPN_2_3 = 0b011,
+	AINPN_0_G = 0b100,
+	AINPN_1_G = 0b101,
+	AINPN_2_G = 0b110,
+	AINPN_3_G = 0b111
+} MUX;
+typedef enum PGA {
+	FSR_6144 = 0b000,
+	FSR_4096 = 0b001,
+	FSR_2048 = 0b010,
+	FSR_1024 = 0b011,
+	FSR_0512 = 0b100,
+	FSR_0256 = 0b101
+} PGA;
+typedef enum MODE { // Continuous Conversion (CC) & Single Shot (SS)
+	CC_EN = 0x0,
+	SS_EN = 0x1
+} MODE;
+typedef enum DR {
+	SPS_8 = 0b000,
+	SPS_16 = 0b001,
+	SPS_32 = 0b010,
+	SPS_64 = 0b011,
+	SPS_128 = 0b100,
+	SPS_250 = 0b101,
+	SPS_475 = 0b110,
+	SPS_860 = 0b111
+} DR;
+typedef enum TS_MODE {
+	ADC_MODE = 0x0, TEMP_MODE = 0x1
+} TS_MODE;
+typedef enum PULL_UP_EN {
+	DISABLED = 0x0, ENABLED = 0x1
+} PULL_UP_EN;
+typedef enum NOP {
+	DATA_VALID = 0b01, DATA_INVALID = 0b10
+} NOP;
 
-	enum MUX {
-	    AINPN_0_1 	= 	0x0,
-	    AINPN_0_3 	=   0x1,
-	    AINPN_1_3 	=   0x2,
-	    AINPN_2_3 	=   0x3,
-	    AINPN_0_GND	=  	0x4,
-	    AINPN_1_GND	=  	0x5,
-	    AINPN_2_GND	=  	0x6,
-	    AINPN_3_GND	=  	0x7
-	};
+void cs_low_stm(struct ADS*);
+void cs_high_stm(struct ADS*);
+void cs_low_pcf(struct ADS*);
+void cs_high_pcf(struct ADS*);
 
-	enum ADS_MODE {
-	    ADC_MODE    =   0x0,
-	    TEMP_MODE 	=  	0x1
-	};
+void initADS(ADS* adsInstance, SPI_HandleTypeDef* spiInstance, GPIO_TypeDef* PORT, uint16_t GPIO_PIN);
+bool resetConfig(ADS* ads);
+bool editConfig(ADS* ads, uint16_t prevConfig);
+bool enableSingleshot(ADS* ads);
+bool enableContinuousConversion(ADS* ads);
 
-	enum DATAREADY {
-		DATAREADY	=	0x0,
-		DATANREADY	=	0x1
-	};
-private:
-	void SPI_RCC_Config();
-	void SPI_GPIO_Config();
-	void SPI_NVIC_Config();
-	bool SPIWrite();
-	bool Convert(uint_32 values[]);
-	void PrintDebugStatus(uint_8 status);
-	bool debug = false;
+bool enableADCSensor(ADS* ads);
+bool enableTempSensor(ADS* ads);
 
-	ADS_InitStruct configReg;
+bool continuousRead(ADS* ads);
+bool singleshotRead(ADS* ads);
 
-	enum PGA_CONV {
-		CONV_PGA_6144 	=	5333,
-		CONV_PGA_4096 	=	8000,
-		CONV_PGA_2048 	=	16000,
-		CONV_PGA_1024 	=	32000,
-		CONV_PGA_512 	=	64000,
-		CONV_PGA_256 	=	128000 ///ts gonna overflow....................................
-	};
+bool enableAINPN_0_1(ADS* ads);
+bool enableAINPN_0_3(ADS* ads);
+bool enableAINPN_1_3(ADS* ads);
+bool enableAINPN_2_3(ADS* ads);
+bool enableAINPN_0_G(ADS* ads);
+bool enableAINPN_1_G(ADS* ads);
+bool enableAINPN_2_G(ADS* ads);
+bool enableAINPN_3_G(ADS* ads);
 
-	//-------CONSTANTS-------//
-	#define DEFAULT_PGA			PGA_2048
-	#define ADS1118_DISABLE		GPIO_SetBits(SPI_MASTER_GPIO, SPI_MASTER_PIN_NSS) //send CS high
-	#define ADS1118_ENABLE		GPIO_ResetBits(SPI_MASTER_GPIO, SPI_MASTER_PIN_NSS)//send CS low
-	/***************SPI*******************/
-	#define SPI_TIMEOUT			10		//10ms
-	#define SPI_MAX_TRIES		3		//the max amount of tries any read or write command will do
-	#define SPI					SPI2
-	#define SPI_CLK				RCC_APB1Periph_SPI2
-	#define SPI_GPIO            GPIOB
-	#define SPI_GPIO_CLK        RCC_APB2Periph_GPIOB
-	#define	SPI_PIN_NSS			GPIO_Pin_10
-	#define SPI_PIN_SCK         GPIO_Pin_11
-	#define SPI_PIN_MISO        GPIO_Pin_12
-	#define SPI_PIN_MOSI        GPIO_Pin_13
-	#define SPI_IRQn            SPI2_IRQn
-	/*************END SPI****************/
+bool enableFSR_6144(ADS* ads);
+bool enableFSR_4096(ADS* ads);
+bool enableFSR_2048(ADS* ads);
+bool enableFSR_1024(ADS* ads);
+bool enableFSR_0512(ADS* ads);
+bool enableFSR_0256(ADS* ads);
 
-	/*************GPIO*******************/
-};
+bool enableSPS_8(ADS* ads);
+bool enableSPS_16(ADS* ads);
+bool enableSPS_32(ADS* ads);
+bool enableSPS_64(ADS* ads);
+bool enableSPS_128(ADS* ads);
+bool enableSPS_250(ADS* ads);
+bool enableSPS_475(ADS* ads);
+bool enableSPS_860(ADS* ads);
+
+float parseVoltage(ADS* adsInstance, int16_t adsReading);
+float parseTemp(int16_t adsReading);
+
 #endif /* SRC_ADS1118_H_ */
-

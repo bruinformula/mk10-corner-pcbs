@@ -1,27 +1,29 @@
 #include "MLX90640_I2C_Driver.h"
-#include "stdio.h"
-#include "i2c.h"
 
 void MLX90640_I2CInit() {
 	MX_I2C1_Init();
 }
 
 void MLX90640_I2CFreqSet(int freq) {
-	// frequency is in kHz
+	// Frequency is in kHz
 	HAL_I2C_DeInit(&hi2c1);
 	hi2c1.Init.Timing = freq;
 	HAL_I2C_Init(&hi2c1);
 
 }
 
-void MLX90640_getDeviceId(uint8_t slaveAddr) {
-	uint16_t device_id;
-	int status = MLX90640_I2CRead(slaveAddr, 0x2407, 1, &device_id);
-	if (status != HAL_OK) {
-		printf("ERROR");
-	} else {
-		printf("DEVICE ID: %d\r\n", device_id);
+int MLX90640_I2CGeneralReset() {
+	uint8_t reset_cmd = 0x06;
+	int ack = HAL_I2C_Master_Transmit(&hi2c1, 0x00 << 1, &reset_cmd, 1, HAL_MAX_DELAY);
+	if (ack != HAL_OK) {
+		return -1;
 	}
+	return 0;
+}
+
+int MLX90640_getDeviceId(uint8_t slaveAddr, uint16_t* device_id) {
+	// 4640 should be the Device ID Returned
+	return MLX90640_I2CRead(slaveAddr, 0x2407, 1, device_id);
 }
 
 void I2CScan() {
@@ -74,15 +76,5 @@ int MLX90640_I2CWrite(uint8_t slaveAddr, uint16_t writeAddress, uint16_t data) {
 	MLX90640_I2CRead(slaveAddr, writeAddress, 2, &dataCheck);
 	if (dataCheck != data) return -2;
 
-	return 0;
-}
-
-int MLX90640_I2CGeneralReset(uint8_t slaveAddr) {
-	uint8_t resetCode = 0x06;
-	int ack = HAL_I2C_Mem_Write(&hi2c1, (slaveAddr << 1), 0x00, I2C_MEMADD_SIZE_8BIT,
-			&resetCode, 1, 500);
-	if (ack != HAL_OK) {
-		return -1;
-	}
 	return 0;
 }

@@ -27,10 +27,10 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "dataframes.h"
 
 /* USER CODE BEGIN Includes */
-
+#include "dataframes.h"
+#include "stdbool.h"
 /* USER CODE END Includes */
 
 extern CAN_HandleTypeDef hcan1;

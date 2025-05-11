@@ -8,14 +8,58 @@
 #ifndef INC_SENSOR_READ_HELPERS_H_
 #define INC_SENSOR_READ_HELPERS_H_
 
+// Include all our driver/peripheral libraries
+#include "stdio.h"
 #include "dataframes.h"
-#include "stdbool.h"
-#include "adc.h"
+#include "can.h"
+#include "i2c.h"
 #include "spi.h"
+#include "adc.h"
+#include "tim.h"
+#include "MLX90640_API.h"
+#include "MLX90640_I2C_Driver.h"
+#include "ads1118.h"
 
-bool initializeMLX();
-void computeMLXSample();
+// Necessary defines for all the pins + other parameters
+#define ADS_EN_PORT GPIOA
+#define ADS_EN_PIN GPIO_PIN_4
+#define RS485_EN_PORT GPIOB
+#define RS485_EN_PIN GPIO_PIN_3
 
+#define SG_GF 2.08 // According to Amazon
+#define YG_MODULUS 205 // in gPa
+
+#define MLX_ADDR 0x33
+#define TA_SHIFT 8
+#define EMISSIVITY 0.95
+
+#define WHS_IN_PORT GPIOB
+#define WHS_IN_PIN GPIO_PIN_4
+
+#define LINPOT_PORT GPIOA
+#define LINPOT_PIN GPIO_PIN_1
+#define LINPOT_STROKE_LENGTH 60 // in mm
+
+// Any other necessary variables
+extern ADS StrainGaugeADS;
+extern float crossSectionalArea;
+
+extern uint16_t MLX_eeData[832];
+extern paramsMLX90640 MLX_params;
+extern uint16_t MLX_dataFrame[834];
+extern float MLX_to[768];
+extern uint8_t MLX_sample[32];
+
+extern uint16_t adcBuffer[1];
+//extern float linpot_reading;
+
+// Perform any necessary initializations of our hardware
+bool initializeLinPot(ADC_HandleTypeDef* adcInstance);
+bool initializeTireTemp();
+bool initializeStrainGauge(SPI_HandleTypeDef* spiInstance);
+bool initializeBrakeTemp();
+
+// All our read functions called in main
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
 void readBrakeTemp(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
 void readTireTemp(uint32_t *lastReadMS, TTEMP_DATAFRAME *dataframes);
@@ -23,5 +67,9 @@ void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAM
 void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
 void readBoardTemp(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
 
+// Helper computation functions
+void getMLXSample();
+uint16_t getScaledStrainGaugeForce(float voltageReading);
+float getLinPotTravel();
 
 #endif /* INC_SENSOR_READ_HELPERS_H_ */

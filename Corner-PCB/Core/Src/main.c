@@ -20,6 +20,7 @@
 #include "main.h"
 #include "adc.h"
 #include "can.h"
+#include "dma.h"
 #include "i2c.h"
 #include "spi.h"
 #include "tim.h"
@@ -29,7 +30,6 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "sensor_read_helpers.h"
-//#include "stm32l4xx_hal_msp.c"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,10 +52,9 @@
 
 /* USER CODE BEGIN PV */
 
-struct CORNER_CAN_CONTEXT CANCONTEXT;
-//union SG_DATAFRAME sg_dataframe;
-//union TTEMP_DATAFRAME ttemp_dataframes[4];
-//union MISC_DATAFRAME misc_dataframe;
+//struct CORNER_CAN_CONTEXT CANCONTEXT;
+bool linpot_status;
+float linpot_reading;
 
 /* private variables to keep track of when last read was */
 uint32_t ms_since_linpot_read;
@@ -74,7 +73,6 @@ uint32_t ms_since_miscmsg_broadcast;
 uint32_t ms_since_strain_broadcast;
 uint32_t ms_since_ttemp_broadcast;
 
-
 CAN_TxHeaderTypeDef CTXHeader;
 
 /* USER CODE END PV */
@@ -83,16 +81,10 @@ CAN_TxHeaderTypeDef CTXHeader;
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
 
-
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
-
-
-
-
 
 /* USER CODE END 0 */
 
@@ -126,6 +118,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_DMA_Init();
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_CAN1_Init();
@@ -134,8 +127,8 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-	//  HAL_ADC_Start(&hadc1);
 
+  linpot_status = initializeLinPot(&hadc1);
 
   /* USER CODE END 2 */
 
@@ -144,21 +137,16 @@ int main(void)
 	while (1)
 	{
 
-		//		HAL_ADC_PollForConversion(&hadc1, 100);
-		//		lin_pot_val = HAL_ADC_GetValue(&hadc1);
+		initializeLinPot(&hadc1);
+		linpot_reading = getLinPotTravel();
 
-		//		spamCan();
-
-		//read the sensors
-		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
-		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
-		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
-		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
-		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
-		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &(CANCONTEXT.misc_dataframe));
-
-		//send out the sensors
-		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
+//		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
+//		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
+//		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
+//		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
+//		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
+//		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &(CANCONTEXT.misc_dataframe));
+//		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
 
     /* USER CODE END WHILE */
 

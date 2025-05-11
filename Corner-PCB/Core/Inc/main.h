@@ -59,8 +59,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define GEN_FAULT_Pin GPIO_PIN_0
-#define GEN_FAULT_GPIO_Port GPIOB
+#define LIN_POT_IN_Pin GPIO_PIN_1
+#define LIN_POT_IN_GPIO_Port GPIOA
+#define ADS_EN_Pin GPIO_PIN_4
+#define ADS_EN_GPIO_Port GPIOA
+#define RS485_EN_Pin GPIO_PIN_3
+#define RS485_EN_GPIO_Port GPIOB
 #define WHS_IN_Pin GPIO_PIN_4
 #define WHS_IN_GPIO_Port GPIOB
 
