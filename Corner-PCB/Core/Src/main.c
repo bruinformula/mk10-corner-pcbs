@@ -52,9 +52,10 @@
 
 /* USER CODE BEGIN PV */
 
-//struct CORNER_CAN_CONTEXT CANCONTEXT;
+struct CORNER_CAN_CONTEXT CANCONTEXT;
 bool linpot_status;
-float linpot_reading;
+// bool mlx_status;
+// bool ads_status;
 
 /* private variables to keep track of when last read was */
 uint32_t ms_since_linpot_read;
@@ -129,6 +130,8 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   linpot_status = initializeLinPot(&hadc1);
+  // mlx_status = initializeTireTemp();
+  // ads_status = initializeStrainGauge(&hspi1);
 
   /* USER CODE END 2 */
 
@@ -137,10 +140,8 @@ int main(void)
 	while (1)
 	{
 
-		initializeLinPot(&hadc1);
-		linpot_reading = getLinPotTravel();
+		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
 
-//		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
 //		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
 //		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
 //		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));

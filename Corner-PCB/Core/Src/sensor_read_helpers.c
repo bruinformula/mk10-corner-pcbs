@@ -17,7 +17,7 @@ float MLX_to[768];
 uint8_t MLX_sample[32];
 
 uint16_t adcBuffer[1];
-//float linpot_reading;
+float linpot_reading;
 
 bool initializeLinPot(ADC_HandleTypeDef* adcInstance) {
 	if (HAL_ADC_Start_DMA(adcInstance, (uint32_t*) adcBuffer, 1) != HAL_OK) {
@@ -46,10 +46,9 @@ bool initializeStrainGauge(SPI_HandleTypeDef *spiInstance) {
 // Read functions
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MISC_DATAFRAME *dataframe) {
 	if( HAL_GetTick() - *lastReadMS > SHOCK_TRAVEL_SAMPLE_PERIOD) {
-//		HAL_ADC_Start_DMA(hadc, (uint32_t*) adcBuffer, 1);
-//		linpot_reading = getLinPotTravel();
-//		dataframe->data.shockTravel = (uint16_t)linpot_reading;
-		dataframe->data.shockTravel = 0;
+		HAL_ADC_Start_DMA(hadc, (uint32_t*) adcBuffer, 1);
+		linpot_reading = getLinPotTravel();
+		dataframe->data.shockTravel = (uint16_t)(linpot_reading*100);
 		*lastReadMS = HAL_GetTick();
 	}
 	//todo: convert counts to travel

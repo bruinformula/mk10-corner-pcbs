@@ -51,7 +51,7 @@ extern float MLX_to[768];
 extern uint8_t MLX_sample[32];
 
 extern uint16_t adcBuffer[1];
-//extern float linpot_reading;
+extern float linpot_reading;
 
 // Perform any necessary initializations of our hardware
 bool initializeLinPot(ADC_HandleTypeDef* adcInstance);
