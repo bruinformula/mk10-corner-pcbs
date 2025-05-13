@@ -2,5 +2,5 @@
 ../Core/Src/can.c:62:6:HAL_CAN_MspInit	48	static
 ../Core/Src/can.c:99:6:HAL_CAN_MspDeInit	16	static
 ../Core/Src/can.c:123:19:CANTransmitMinion	40	static
-../Core/Src/can.c:148:6:clearEflagsHelper	16	static
-../Core/Src/can.c:160:6:CANMailman	32	static
+../Core/Src/can.c:147:6:clearEflagsHelper	16	static
+../Core/Src/can.c:159:6:CANMailman	32	static

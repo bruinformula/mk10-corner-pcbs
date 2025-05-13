@@ -23,7 +23,6 @@
 #include "dma.h"
 #include "i2c.h"
 #include "spi.h"
-#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -54,8 +53,8 @@
 
 struct CORNER_CAN_CONTEXT CANCONTEXT;
 bool linpot_status;
-// bool mlx_status;
-// bool ads_status;
+bool mlx_status;
+bool ads_status;
 
 /* private variables to keep track of when last read was */
 uint32_t ms_since_linpot_read;
@@ -65,11 +64,7 @@ uint32_t ms_since_btemp_read;
 uint32_t ms_since_whs_read;
 uint32_t ms_since_boardtemp_read;
 
-/* private variables to keep track of when last broadcast was */
-/* idea of this being separate is because some have to be read faster than others,
- * so u send this message at fastest rate and just send duplicate data which isn't bad
- * because theoretically itll help align on the postprocessing side
- */
+
 uint32_t ms_since_miscmsg_broadcast;
 uint32_t ms_since_strain_broadcast;
 uint32_t ms_since_ttemp_broadcast;
@@ -121,7 +116,6 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  MX_TIM1_Init();
   MX_CAN1_Init();
   MX_I2C1_Init();
   MX_SPI1_Init();
@@ -129,23 +123,21 @@ int main(void)
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
 
+//  initializeWheelSpeed();
   linpot_status = initializeLinPot(&hadc1);
-  // mlx_status = initializeTireTemp();
-  // ads_status = initializeStrainGauge(&hspi1);
+  mlx_status = initializeTireTemp();
+  ads_status = initializeStrainGauge(&hspi1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	while (1)
-	{
-
-		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
-
-//		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
-//		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
+	while (1) {
 //		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
 //		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
+//		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
+		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
+		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
 //		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &(CANCONTEXT.misc_dataframe));
 //		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
 

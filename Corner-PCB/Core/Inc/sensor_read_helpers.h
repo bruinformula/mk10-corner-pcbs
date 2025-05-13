@@ -15,7 +15,6 @@
 #include "i2c.h"
 #include "spi.h"
 #include "adc.h"
-#include "tim.h"
 #include "MLX90640_API.h"
 #include "MLX90640_I2C_Driver.h"
 #include "ads1118.h"
@@ -23,6 +22,7 @@
 // Necessary defines for all the pins + other parameters
 #define ADS_EN_PORT GPIOA
 #define ADS_EN_PIN GPIO_PIN_4
+
 #define RS485_EN_PORT GPIOB
 #define RS485_EN_PIN GPIO_PIN_3
 
@@ -33,15 +33,15 @@
 #define TA_SHIFT 8
 #define EMISSIVITY 0.95
 
-#define WHS_IN_PORT GPIOB
-#define WHS_IN_PIN GPIO_PIN_4
-
 #define LINPOT_PORT GPIOA
 #define LINPOT_PIN GPIO_PIN_1
-#define LINPOT_STROKE_LENGTH 60 // in mm
+#define LINPOT_STROKE_LENGTH 85 // in mm; NEED TO CALIBRATE
+
+#define PULSES_PER_REVOLUTION 1.0 // NEED TO CALIBRATE
+#define HALL_EFFECT_SAMPLE_INTERVAL 50.0
 
 // Any other necessary variables
-extern ADS StrainGaugeADS;
+extern ADS StrainGaugeADS; // Can also read board temp btw
 extern float crossSectionalArea;
 
 extern uint16_t MLX_eeData[832];
@@ -53,11 +53,14 @@ extern uint8_t MLX_sample[32];
 extern uint16_t adcBuffer[1];
 extern float linpot_reading;
 
+extern volatile int hall_effect_edges;
+
 // Perform any necessary initializations of our hardware
 bool initializeLinPot(ADC_HandleTypeDef* adcInstance);
 bool initializeTireTemp();
 bool initializeStrainGauge(SPI_HandleTypeDef* spiInstance);
-bool initializeBrakeTemp();
+void initializeBrakeTemp();
+void initializeWheelSpeed();
 
 // All our read functions called in main
 void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS, MISC_DATAFRAME *dataframe);
@@ -69,7 +72,8 @@ void readBoardTemp(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, MISC_DATAFRAME
 
 // Helper computation functions
 void getMLXSample();
-uint16_t getScaledStrainGaugeForce(float voltageReading);
+float getStrainGaugeForce(float voltageReading);
 float getLinPotTravel();
+float getRPM();
 
 #endif /* INC_SENSOR_READ_HELPERS_H_ */
