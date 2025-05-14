@@ -35,10 +35,10 @@
 
 #define LINPOT_PORT GPIOA
 #define LINPOT_PIN GPIO_PIN_1
-#define LINPOT_STROKE_LENGTH 85 // in mm; NEED TO CALIBRATE
+#define LINPOT_STROKE_LENGTH 80 // in mm; NEED TO CALIBRATE
 
 #define PULSES_PER_REVOLUTION 1.0 // NEED TO CALIBRATE
-#define HALL_EFFECT_SAMPLE_INTERVAL 50.0
+#define HALL_EFFECT_SAMPLE_INTERVAL 250.0
 
 // Any other necessary variables
 extern ADS StrainGaugeADS; // Can also read board temp btw

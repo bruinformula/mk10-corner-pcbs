@@ -122,24 +122,25 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_CAN_Start(&hcan1); // NEED TO CALL THIS OTHERWISE EVERYTHING BUGS OUT
 
-//  initializeWheelSpeed();
-  linpot_status = initializeLinPot(&hadc1);
-  mlx_status = initializeTireTemp();
-  ads_status = initializeStrainGauge(&hspi1);
+    initializeWheelSpeed();
+    linpot_status = initializeLinPot(&hadc1);
+    mlx_status = initializeTireTemp();
+    ads_status = initializeStrainGauge(&hspi1);
 
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
 	while (1) {
-//		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
-//		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
+		readStrainGauges(&hspi1, &ms_since_strain_read, &(CANCONTEXT.straingauge_dataframe));
+		readWheelSpeed(&ms_since_whs_read, &(CANCONTEXT.misc_dataframe));
 //		readBrakeTemp(&ms_since_btemp_read, &(CANCONTEXT.misc_dataframe));
 		readTireTemp(&ms_since_ttemp_read, (CANCONTEXT.ttemp_dataframes));
 		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
 //		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &(CANCONTEXT.misc_dataframe));
-//		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
+		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
 
     /* USER CODE END WHILE */
 
