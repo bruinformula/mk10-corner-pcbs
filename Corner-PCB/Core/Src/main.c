@@ -122,7 +122,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_CAN_Start(&hcan1); // NEED TO CALL THIS OTHERWISE EVERYTHING BUGS OUT
+  	HAL_CAN_Start(&hcan1); // NEED TO CALL THIS OTHERWISE EVERYTHING BUGS OUT
 
     initializeWheelSpeed();
     linpot_status = initializeLinPot(&hadc1);
@@ -141,7 +141,6 @@ int main(void)
 		readLinearPotentiometer(&hadc1, &ms_since_linpot_read, &(CANCONTEXT.misc_dataframe));
 //		readBoardTemp(&hspi1, &ms_since_boardtemp_read, &(CANCONTEXT.misc_dataframe));
 		CANMailman(&hcan1, &CTXHeader, &CANCONTEXT);
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

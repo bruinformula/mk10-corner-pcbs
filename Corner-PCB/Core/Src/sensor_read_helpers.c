@@ -200,8 +200,9 @@ float getLinPotTravel() {
 }
 
 float getRPM() {
-	float edgesPerSecond = (hall_effect_edges*1000.0)/HALL_EFFECT_SAMPLE_INTERVAL;
-	float rps = edgesPerSecond/PULSES_PER_REVOLUTION;
-	return rps*60.0;
+	float rotations = ((float)hall_effect_edges)/EDGES_PER_REVOLUTION; // edges counts rising + falling edge
+	// 12 pulses correspond to one rotation; so 24 edges (counting rising/falling)
+	float rpm = ((rotations*1000.0)/HALL_EFFECT_SAMPLE_INTERVAL)*60.0;
+	return rpm;
 }
 
