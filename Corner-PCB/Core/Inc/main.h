@@ -65,9 +65,9 @@ void Error_Handler(void);
 #define ADS_EN_GPIO_Port GPIOA
 #define RS485_EN_Pin GPIO_PIN_3
 #define RS485_EN_GPIO_Port GPIOB
-#define WHS_IN_Pin GPIO_PIN_4
+#define WHS_IN_Pin GPIO_PIN_5
 #define WHS_IN_GPIO_Port GPIOB
-#define WHS_IN_EXTI_IRQn EXTI4_IRQn
+#define WHS_IN_EXTI_IRQn EXTI9_5_IRQn
 
 /* USER CODE BEGIN Private defines */
 

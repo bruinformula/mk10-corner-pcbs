@@ -59,6 +59,8 @@ void readLinearPotentiometer(ADC_HandleTypeDef *hadc, uint32_t *lastReadMS,  MIS
 		HAL_ADC_Start_DMA(hadc, (uint32_t*) adcBuffer, 1);
 		linpot_reading = getLinPotTravel();
 		dataframe->data.shockTravel = (uint16_t)(linpot_reading*100);
+//				dataframe->data.shockTravel = (uint16_t)(100);
+
 		*lastReadMS = HAL_GetTick();
 	}
 	//todo: convert counts to travel
@@ -120,22 +122,24 @@ void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAM
 		*lastReadMS = HAL_GetTick();
 	}
 }
-
+uint32_t totalEdgesSinceBeginningOfTime = 0;
+GPIO_PinState whsPinState = GPIO_PIN_RESET;
 // Special interrupt callback function
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
 	if (GPIO_Pin == WHS_IN_Pin) {
 		hall_effect_edges++;
+		totalEdgesSinceBeginningOfTime++;
 		// Everytime there is a rising edge, we increment the number of edges
 	}
 }
-
 void readWheelSpeed(uint32_t *lastReadMS, MISC_DATAFRAME *dataframe) {
+	whsPinState = HAL_GPIO_ReadPin(WHS_IN_GPIO_Port, WHS_IN_Pin);
 	if (HAL_GetTick() - *lastReadMS > WHEEL_SPEED_SAMPLE_PERIOD) {
 
 		hall_effect_edges = 0; // Reset the count..
-		HAL_NVIC_EnableIRQ(EXTI4_IRQn); // Turn on the interrupt
+		HAL_NVIC_EnableIRQ(EXTI9_5_IRQn); // Turn on the interrupt
 		HAL_Delay(HALL_EFFECT_SAMPLE_INTERVAL); // Burst read over 50 ms
-		HAL_NVIC_DisableIRQ(EXTI4_IRQn);
+		HAL_NVIC_DisableIRQ(EXTI9_5_IRQn);
 		dataframe->data.wheelRPM = (uint16_t)(getRPM()); // Compute the RPM
 
 		*lastReadMS = HAL_GetTick();
@@ -195,7 +199,7 @@ float getStrainGaugeForce(float voltageReading) {
 }
 
 float getLinPotTravel() {
-	float position_mm = ((float)adcBuffer[0] / 4095.0) * LINPOT_STROKE_LENGTH;
+	float position_mm = ((((float)adcBuffer[0]-LINPOT_CALIB_MIN_ANACOUNTS) / (LINPOT_CALIB_MAX_ANACOUNTS - LINPOT_CALIB_MIN_ANACOUNTS))) * (float)LINPOT_STROKE_LENGTH;
 	return position_mm;
 }
 

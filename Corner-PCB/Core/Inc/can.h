@@ -36,13 +36,15 @@ extern "C" {
 extern CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN Private defines */
-#define CORNER_NUMBER 1
+#define CORNER_NUMBER 4
 #define STRAIN_GAUGE_ID 	0b11100000000 | (CORNER_NUMBER << 4)
 #define TIRE_TEMP_MSG1_ID 	0b11100000001 | (CORNER_NUMBER << 4)
 #define TIRE_TEMP_MSG2_ID 	0b11100000010 | (CORNER_NUMBER << 4)
 #define TIRE_TEMP_MSG3_ID 	0b11100000011 | (CORNER_NUMBER << 4)
 #define TIRE_TEMP_MSG4_ID 	0b11100000100 | (CORNER_NUMBER << 4)
 #define MISC_DATA_ID 		0b11100000101 | (CORNER_NUMBER << 4)
+
+#define TTEMP_DISABLED 1 //set this to 1 to disable tire temp readings
 
 /* how many times itll retry putting any CAN message in a mailbox before j giving up*/
 #define CAN_RETRY_LIMIT 3
@@ -55,11 +57,11 @@ extern CAN_HandleTypeDef hcan1;
 
 
 /* start sampling rates (ms) */
-#define STRAIN_GAUGE_SAMPLE_PERIOD 		3
+#define STRAIN_GAUGE_SAMPLE_PERIOD 		4
 #define TIRE_TEMP_SAMPLE_PERIOD 		501
 #define WHEEL_SPEED_SAMPLE_PERIOD 		11 //this is how long it outputs an actual speed
 #define BRAKE_TEMP_SAMPLE_PERIOD		101
-#define SHOCK_TRAVEL_SAMPLE_PERIOD		21
+#define SHOCK_TRAVEL_SAMPLE_PERIOD		10
 #define BOARD_TEMP_SAMPLE_PERIOD		1001
 /* end sampling rates */
 

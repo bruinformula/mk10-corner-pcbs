@@ -192,7 +192,7 @@ void CANMailman(CAN_HandleTypeDef *canport, CAN_TxHeaderTypeDef *header, CORNER_
 	}
 
 	/**** BEGIN SEND TIRE TEMP DATA ****/
-	if (HAL_GetTick() - CANCONTEXT->ms_since_ttemp_broadcast > TIRE_TEMP_TRANSMISSION_PERIOD) {
+	if (!TTEMP_DISABLED && HAL_GetTick() - CANCONTEXT->ms_since_ttemp_broadcast > TIRE_TEMP_TRANSMISSION_PERIOD) {
 
 		//		CTXHeader.IDE = CAN_ID_STD;
 		//		CTXHeader.RTR = CAN_RTR_DATA;

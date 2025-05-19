@@ -52,6 +52,10 @@ extern uint8_t MLX_sample[32];
 
 extern uint16_t adcBuffer[1];
 extern float linpot_reading;
+#define LINPOT_CALIB_MAX_ANACOUNTS 1166//analog counts corresponding to 0% sensor travel; max load
+#define LINPOT_CALIB_MIN_ANACOUNTS 0//analog counts corresponding to 100% sensor travel; no load
+
+
 
 extern volatile int hall_effect_edges;
 
