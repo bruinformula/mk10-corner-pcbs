@@ -36,7 +36,7 @@ extern "C" {
 extern CAN_HandleTypeDef hcan1;
 
 /* USER CODE BEGIN Private defines */
-#define CORNER_NUMBER 4
+#define CORNER_NUMBER 2
 #define STRAIN_GAUGE_ID 	0b11100000000 | (CORNER_NUMBER << 4)
 #define TIRE_TEMP_MSG1_ID 	0b11100000001 | (CORNER_NUMBER << 4)
 #define TIRE_TEMP_MSG2_ID 	0b11100000010 | (CORNER_NUMBER << 4)

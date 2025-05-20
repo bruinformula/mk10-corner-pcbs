@@ -8,8 +8,6 @@
 #define CONFIG_BIT_RESV 1
 
 // ADS Struct
-// Slightly altered the driver to take in a PCF8574A (GPIO Extender) Instance because it controls the chip selects
-// Possibly an issue with the "NOP" Flag?
 typedef struct ADS {
 	SPI_HandleTypeDef *hspi;
 	float FSR;

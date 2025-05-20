@@ -46,11 +46,12 @@ bool initializeLinPot(ADC_HandleTypeDef* adcInstance) {
 }
 
 bool initializeStrainGauge(SPI_HandleTypeDef *spiInstance) {
-	bool status_1, status_2;
+	bool status_1, status_2, status_3;
 	initADS(&StrainGaugeADS, spiInstance, ADS_EN_PORT, ADS_EN_PIN);
 	status_1 = enableContinuousConversion(&StrainGaugeADS);
 	status_2 = enableFSR_6144(&StrainGaugeADS);
-	return (status_1 & status_2);
+	status_3 = enableSPS_250(&StrainGaugeADS);
+	return (status_1 & status_2 & status_3);
 }
 
 // ------- ALL THE READ FUNCTIONS -----------
@@ -99,29 +100,39 @@ void readTireTemp(uint32_t *lastReadMS, TTEMP_DATAFRAME *dataframes) {
 	}
 }
 
+float AIN0_Voltage, AIN1_Voltage, AIN2_Voltage, AIN3_Voltage;
 void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAME *dataframe) {
 	if(HAL_GetTick() - *lastReadMS > STRAIN_GAUGE_SAMPLE_PERIOD){
 		enableADCSensor(&StrainGaugeADS);
 
 		enableAINPN_0_G(&StrainGaugeADS);
+		HAL_Delay(10);
 		continuousRead(&StrainGaugeADS);
-		dataframe->data.SG0 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
-
-		enableAINPN_1_G(&StrainGaugeADS);
-		continuousRead(&StrainGaugeADS);
+		AIN0_Voltage = StrainGaugeADS.voltage;
 		dataframe->data.SG1 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
 
-		enableAINPN_2_G(&StrainGaugeADS);
+		enableAINPN_1_G(&StrainGaugeADS);
+		HAL_Delay(10);
 		continuousRead(&StrainGaugeADS);
+		AIN1_Voltage = StrainGaugeADS.voltage;
+		dataframe->data.SG0 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
+
+		enableAINPN_2_G(&StrainGaugeADS);
+		HAL_Delay(10);
+		continuousRead(&StrainGaugeADS);
+		AIN2_Voltage = StrainGaugeADS.voltage;
 		dataframe->data.SG2 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
 
 		enableAINPN_3_G(&StrainGaugeADS);
+		HAL_Delay(10);
 		continuousRead(&StrainGaugeADS);
+		AIN3_Voltage = StrainGaugeADS.voltage;
 		dataframe->data.SG3 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
 
 		*lastReadMS = HAL_GetTick();
 	}
 }
+
 uint32_t totalEdgesSinceBeginningOfTime = 0;
 GPIO_PinState whsPinState = GPIO_PIN_RESET;
 // Special interrupt callback function
