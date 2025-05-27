@@ -27,7 +27,15 @@
 #define RS485_EN_PIN GPIO_PIN_3
 
 #define SG_GF 2.08 // According to Amazon
-#define YG_MODULUS 205 // in gPa
+#define CROSS_SECTIONAL_AREA 3.296767*1e-5
+#define YG_MODULUS 205*1e9 // in gPa
+#define VSUPP 3.245 // A little <3.3V
+#define GAIN 1001 // Based on datasheet
+// ALL THE 0 LOAD VOLTAGES
+#define HALF_LINKS 0 // Corresponds to SG0, AIN1
+#define PULLROD 0 // Corresponds to SG1, AIN0
+#define UPPER_AARM 0.8459094 // Corresponds to SG2, AIN3
+#define TIEROD 0 // Corresponds to SG3, AIN2
 
 #define MLX_ADDR 0x33
 #define TA_SHIFT 8
@@ -52,10 +60,8 @@ extern uint8_t MLX_sample[32];
 
 extern uint16_t adcBuffer[1];
 extern float linpot_reading;
-#define LINPOT_CALIB_MAX_ANACOUNTS 1166//analog counts corresponding to 0% sensor travel; max load
-#define LINPOT_CALIB_MIN_ANACOUNTS 0//analog counts corresponding to 100% sensor travel; no load
-
-
+#define LINPOT_CALIB_MAX_ANACOUNTS 1166 //analog counts corresponding to 0% sensor travel; max load
+#define LINPOT_CALIB_MIN_ANACOUNTS 0 //analog counts corresponding to 100% sensor travel; no load
 
 extern volatile int hall_effect_edges;
 

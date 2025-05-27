@@ -56,6 +56,7 @@ bool linpot_status;
 bool mlx_status;
 bool ads_status;
 
+
 /* private variables to keep track of when last read was */
 uint32_t ms_since_linpot_read;
 uint32_t ms_since_strain_read;

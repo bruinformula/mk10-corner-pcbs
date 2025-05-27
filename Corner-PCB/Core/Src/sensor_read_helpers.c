@@ -8,7 +8,6 @@
 #include "sensor_read_helpers.h"
 
 ADS StrainGaugeADS;
-float crossSectionalArea = (2.19)*(0.0001);
 
 uint16_t MLX_eeData[832];
 paramsMLX90640 MLX_params;
@@ -49,7 +48,7 @@ bool initializeStrainGauge(SPI_HandleTypeDef *spiInstance) {
 	bool status_1, status_2, status_3;
 	initADS(&StrainGaugeADS, spiInstance, ADS_EN_PORT, ADS_EN_PIN);
 	status_1 = enableContinuousConversion(&StrainGaugeADS);
-	status_2 = enableFSR_6144(&StrainGaugeADS);
+	status_2 = enableFSR_2048(&StrainGaugeADS);
 	status_3 = enableSPS_250(&StrainGaugeADS);
 	return (status_1 & status_2 & status_3);
 }
@@ -101,35 +100,47 @@ void readTireTemp(uint32_t *lastReadMS, TTEMP_DATAFRAME *dataframes) {
 }
 
 float AIN0_Voltage, AIN1_Voltage, AIN2_Voltage, AIN3_Voltage;
+//float AIN0_Avg, AIN1_Avg, AIN2_Avg, AIN3_Avg;
+//int count = 0;
 void readStrainGauges(SPI_HandleTypeDef *hspi, uint32_t *lastReadMS, SG_DATAFRAME *dataframe) {
 	if(HAL_GetTick() - *lastReadMS > STRAIN_GAUGE_SAMPLE_PERIOD){
 		enableADCSensor(&StrainGaugeADS);
+		// We measure the 0-load output voltage for each rod and define them as constants accordingly
+		// In the strainGaugeForce function, we pass in the difference between the ADS Reading & 0-Load Reading
 
-		enableAINPN_0_G(&StrainGaugeADS);
-		HAL_Delay(10);
-		continuousRead(&StrainGaugeADS);
-		AIN0_Voltage = StrainGaugeADS.voltage;
-		dataframe->data.SG1 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
-
-		enableAINPN_1_G(&StrainGaugeADS);
-		HAL_Delay(10);
-		continuousRead(&StrainGaugeADS);
-		AIN1_Voltage = StrainGaugeADS.voltage;
-		dataframe->data.SG0 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
-
-		enableAINPN_2_G(&StrainGaugeADS);
-		HAL_Delay(10);
-		continuousRead(&StrainGaugeADS);
-		AIN2_Voltage = StrainGaugeADS.voltage;
-		dataframe->data.SG2 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
+//		enableAINPN_0_G(&StrainGaugeADS);
+//		HAL_Delay(10);
+//		continuousRead(&StrainGaugeADS);
+//		AIN0_Voltage = StrainGaugeADS.voltage;
+//		dataframe->data.SG1 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage - PULLROD));
+//
+//		enableAINPN_1_G(&StrainGaugeADS);
+//		HAL_Delay(10);
+//		continuousRead(&StrainGaugeADS);
+//		AIN1_Voltage = StrainGaugeADS.voltage;
+//		dataframe->data.SG0 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage - HALF_LINKS));
 
 		enableAINPN_3_G(&StrainGaugeADS);
 		HAL_Delay(10);
 		continuousRead(&StrainGaugeADS);
 		AIN3_Voltage = StrainGaugeADS.voltage;
-		dataframe->data.SG3 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage)*100);
+		dataframe->data.SG2 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage - UPPER_AARM));
+
+//		enableAINPN_2_G(&StrainGaugeADS);
+//		HAL_Delay(10);
+//		continuousRead(&StrainGaugeADS);
+//		AIN2_Voltage = StrainGaugeADS.voltage;
+//		dataframe->data.SG3 = (uint16_t)(getStrainGaugeForce(StrainGaugeADS.voltage));
 
 		*lastReadMS = HAL_GetTick();
+
+//		if (count < 250) {
+//			AIN0_Avg += AIN0_Voltage;
+//			AIN1_Avg += AIN1_Voltage;
+//			AIN2_Avg += AIN2_Voltage;
+//			AIN3_Avg += AIN3_Voltage;
+//			count++;
+//		}
 	}
 }
 
@@ -203,10 +214,11 @@ void getMLXSample() {
 	}
 }
 
-float getStrainGaugeForce(float voltageReading) {
-	float strain = (voltageReading/3.3*SG_GF);
-	float stress = strain*YG_MODULUS;
-	return (stress*crossSectionalArea);
+float strain, stress;
+float getStrainGaugeForce(float voltageDiff) {
+	strain = (4*voltageDiff)/(GAIN*VSUPP*SG_GF);
+	stress = strain*YG_MODULUS;
+	return (stress*CROSS_SECTIONAL_AREA);
 }
 
 float getLinPotTravel() {
